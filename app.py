@@ -25,6 +25,7 @@ REAL_SALES_SHEET = "실매출"
 ADJUSTED_SALES_SHEET = "보정매출"
 AGENCY_SHEET = "대리점 리스트"
 MULTIPLIER_SHEET = "매출 배수적용"
+HOLIDAY_SHEET = "휴일예약"
 
 st.set_page_config(
     page_title="HNT Promotion Dashboard",
@@ -242,8 +243,8 @@ def load_sales_sheet(
     }
 
     aliases = {
-        "담당실": ["담당실", "영업실"],
-        "담당팀": ["담당팀", "영업팀"],
+        "담당실": ["담당실", "영업실", "담당영업실"],
+        "담당팀": ["담당팀", "영업팀", "담당영업팀"],
         "담당세일즈": ["담당세일즈", "담당 세일즈", "세일즈"],
         "대리점명": ["대리점한글명", "대리점명", "대리점 이름"],
     }
@@ -280,6 +281,47 @@ def load_sales_sheet(
         st.stop()
 
     return dataframe
+
+
+def filter_agency_search(dataframe, search_text, searchable_columns):
+    """
+    검색어가 '영업1실'처럼 '실'로 끝나면 담당실을 정확히 일치시킵니다.
+    그 외 검색어는 지정한 컬럼에서 부분 일치로 검색합니다.
+    """
+    search_text = str(search_text).strip().casefold()
+
+    if not search_text:
+        return dataframe.copy()
+
+    if search_text.endswith("실") and "담당실" in dataframe.columns:
+        office_values = (
+            dataframe["담당실"]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.casefold()
+        )
+        return dataframe[office_values.eq(search_text)].copy()
+
+    available_columns = [
+        column
+        for column in searchable_columns
+        if column in dataframe.columns
+    ]
+
+    if not available_columns:
+        return dataframe.iloc[0:0].copy()
+
+    search_mask = dataframe[available_columns].apply(
+        lambda column: (
+            column.fillna("")
+            .astype(str)
+            .str.casefold()
+            .str.contains(search_text, na=False, regex=False)
+        )
+    ).any(axis=1)
+
+    return dataframe[search_mask].copy()
 
 
 def render_kpi(label, value, note="", accent="purple"):
@@ -659,6 +701,13 @@ adjusted_sales_df = load_sales_sheet(
     "보정매출",
 )
 
+holiday_sales_df = load_sales_sheet(
+    FILE_PATH,
+    HOLIDAY_SHEET,
+    ["휴일 매출", "휴일매출", "매출"],
+    "휴일 매출",
+)
+
 try:
     multiplier_source_df = pd.read_excel(
         FILE_PATH,
@@ -747,7 +796,6 @@ real_sales_df["채널구분"] = (
 # ==================================================
 # 매출 순위 데이터 구성
 # 보정매출 시트 기준으로 집계합니다.
-# 담당팀을 담당실 바로 다음 컬럼으로 표시합니다.
 # ==================================================
 aggregations = {
     "보정매출": ("매출", "sum"),
@@ -855,21 +903,22 @@ with kpi4:
 
 
 # ==================================================
-# 탭 순서: 매출 순위를 첫 번째 탭으로 배치
+# 탭 순서
 # ==================================================
 st.markdown("<br>", unsafe_allow_html=True)
 
-tab_ranking, tab_office, tab_channel = st.tabs(
+tab_ranking, tab_office, tab_channel, tab_holiday = st.tabs(
     [
         "매출 순위",
         "영업실별 매출현황",
         "유통채널별 매출현황",
+        "휴일예약 매출 비중",
     ]
 )
 
 
 # ==================================================
-# 매출 순위 — 첫 번째 탭
+# 매출 순위
 # ==================================================
 with tab_ranking:
     st.markdown(
@@ -906,22 +955,17 @@ with tab_ranking:
     ranking_table = sales_ranking[ranking_columns].copy()
 
     if ranking_search.strip():
-        search_text = ranking_search.strip().casefold()
-        searchable_columns = [
-            "대리점코드",
-            "대리점명",
-            "담당실",
-            "담당팀",
-            "담당세일즈",
-        ]
-
-        search_mask = ranking_table[searchable_columns].apply(
-            lambda column: column.astype(str)
-            .str.casefold()
-            .str.contains(search_text, na=False, regex=False)
-        ).any(axis=1)
-
-        ranking_table = ranking_table[search_mask].copy()
+        ranking_table = filter_agency_search(
+            ranking_table,
+            ranking_search,
+            [
+                "대리점코드",
+                "대리점명",
+                "담당실",
+                "담당팀",
+                "담당세일즈",
+            ],
+        )
 
     ranking_table["보정매출"] = ranking_table["보정매출"].map(
         format_won
@@ -1133,7 +1177,6 @@ with tab_channel:
 
     channel_source = real_sales_df.copy()
 
-    # 원래 채널명을 보존하여 기타 항목의 세부 내역으로 활용합니다.
     channel_source["세부채널"] = (
         channel_source["채널구분"]
         .fillna("")
@@ -1192,7 +1235,6 @@ with tab_channel:
     if channel_summary.empty or channel_revenue_total == 0:
         st.info("표시할 유통채널별 매출 집계 결과가 없습니다.")
     else:
-        # 기타에 해당하는 원래 채널명별 매출을 집계합니다.
         other_detail = (
             channel_source[
                 channel_source["유통채널"].eq("기타")
@@ -1228,7 +1270,6 @@ with tab_channel:
         else:
             other_hover_detail = ""
 
-        # 기타 조각의 툴팁에만 세부 구성 정보를 전달합니다.
         channel_summary["hover_detail"] = channel_summary[
             "유통채널"
         ].apply(
@@ -1287,7 +1328,6 @@ with tab_channel:
             use_container_width=True,
         )
 
-        # 툴팁용 세부 정보는 제외하고 기존 표 열만 표시합니다.
         channel_table = channel_summary[
             ["유통채널", "매출"]
         ].copy()
@@ -1304,4 +1344,180 @@ with tab_channel:
             channel_table,
             right_align_columns=["매출", "구성비"],
             max_height=440,
+        )
+
+
+# ==================================================
+# 휴일예약 매출 비중
+# ==================================================
+with tab_holiday:
+    st.markdown(
+        '<div class="section-heading">휴일예약 매출 비중</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <div class="info-note">
+            대리점별 실매출과 휴일예약 시트의 휴일 매출을 비교합니다.
+            휴일예약 매출 비중은 휴일예약 매출을 실매출로 나누어 계산합니다.
+            휴일예약 시트에 매출이 없는 대리점은 휴일예약 매출 0원으로 표시합니다.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # 실매출 시트를 기준으로 대리점별 실매출과 담당 정보를 집계합니다.
+    comparison_aggregations = {
+        "실매출": ("매출", "sum"),
+    }
+
+    for column in [
+        "대리점명",
+        "담당실",
+        "담당팀",
+        "담당세일즈",
+    ]:
+        if column in real_sales_df.columns:
+            comparison_aggregations[column] = (column, "first")
+
+    holiday_comparison = (
+        real_sales_df
+        .groupby("_대리점코드", as_index=False)
+        .agg(**comparison_aggregations)
+    )
+
+    # 휴일예약 시트의 휴일 매출을 대리점별로 집계합니다.
+    holiday_revenue_by_agency = (
+        holiday_sales_df
+        .groupby("_대리점코드", as_index=False)
+        .agg(휴일예약매출=("매출", "sum"))
+    )
+
+    # 실매출 대리점 전체를 유지하면서 휴일예약 매출을 연결합니다.
+    holiday_comparison = holiday_comparison.merge(
+        holiday_revenue_by_agency,
+        on="_대리점코드",
+        how="left",
+    )
+
+    holiday_comparison["휴일예약매출"] = (
+        holiday_comparison["휴일예약매출"]
+        .fillna(0)
+    )
+
+    for column in [
+        "대리점명",
+        "담당실",
+        "담당팀",
+        "담당세일즈",
+    ]:
+        if column not in holiday_comparison.columns:
+            holiday_comparison[column] = ""
+
+        holiday_comparison[column] = (
+            holiday_comparison[column]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+        )
+
+    holiday_comparison["대리점코드"] = (
+        holiday_comparison["_대리점코드"]
+        .fillna("")
+        .astype(str)
+        .str.replace(r"\.0$", "", regex=True)
+    )
+
+    holiday_comparison["_휴일예약 매출 비중"] = 0.0
+    has_real_sales = holiday_comparison["실매출"].ne(0)
+
+    holiday_comparison.loc[
+        has_real_sales,
+        "_휴일예약 매출 비중",
+    ] = (
+        holiday_comparison.loc[has_real_sales, "휴일예약매출"]
+        .div(holiday_comparison.loc[has_real_sales, "실매출"])
+        .mul(100)
+    )
+
+    holiday_search = st.text_input(
+        "휴일예약 매출 검색",
+        placeholder="대리점코드, 대리점명, 담당실, 담당팀 또는 담당세일즈 검색",
+        key="holiday_search",
+    )
+
+    holiday_table = holiday_comparison.copy()
+
+    if holiday_search.strip():
+        holiday_table = filter_agency_search(
+            holiday_table,
+            holiday_search,
+            [
+                "대리점코드",
+                "대리점명",
+                "담당실",
+                "담당팀",
+                "담당세일즈",
+            ],
+        )
+
+    holiday_table = holiday_table.sort_values(
+        "_휴일예약 매출 비중",
+        ascending=False,
+    ).copy()
+
+    holiday_table = holiday_table[
+        [
+            "대리점코드",
+            "대리점명",
+            "담당실",
+            "담당팀",
+            "담당세일즈",
+            "실매출",
+            "휴일예약매출",
+            "_휴일예약 매출 비중",
+        ]
+    ].rename(
+        columns={
+            "휴일예약매출": "휴일예약 매출",
+            "_휴일예약 매출 비중": "휴일예약 매출 비중",
+        }
+    )
+
+    holiday_table["실매출"] = holiday_table["실매출"].map(format_won)
+    holiday_table["휴일예약 매출"] = (
+        holiday_table["휴일예약 매출"].map(format_won)
+    )
+    holiday_table["휴일예약 매출 비중"] = (
+        holiday_table["휴일예약 매출 비중"]
+        .map(lambda value: f"{value:.1f}%")
+    )
+
+    if holiday_search.strip():
+        st.caption(f"검색 결과 {len(holiday_table):,}건")
+
+    if holiday_table.empty:
+        st.info("검색 조건에 맞는 대리점이 없습니다.")
+    else:
+        render_html_table(
+            holiday_table,
+            left_align_columns=["대리점명"],
+            right_align_columns=[
+                "실매출",
+                "휴일예약 매출",
+                "휴일예약 매출 비중",
+            ],
+            column_widths={
+                "대리점코드": "140px",
+                "대리점명": "320px",
+                "담당실": "130px",
+                "담당팀": "130px",
+                "담당세일즈": "150px",
+                "실매출": "180px",
+                "휴일예약 매출": "190px",
+                "휴일예약 매출 비중": "180px",
+            },
+            min_table_width="1420px",
+            max_height=560,
         )
