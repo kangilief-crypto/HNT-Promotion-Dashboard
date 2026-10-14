@@ -1,6 +1,6 @@
+from pathlib import Path
 import numbers
 from html import escape
-from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
@@ -8,9 +8,9 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 
-# ==================================================
+# =========================================================
 # 설정
-# ==================================================
+# =========================================================
 PURPLE = "#5E2BB8"
 MINT = "#08D1D9"
 DARK = "#252238"
@@ -27,6 +27,10 @@ AGENCY_SHEET = "대리점 리스트"
 MULTIPLIER_SHEET = "매출 배수적용"
 HOLIDAY_SHEET = "휴일예약"
 
+
+# =========================================================
+# 페이지 설정 및 스타일
+# =========================================================
 st.set_page_config(
     page_title="HNT Promotion Dashboard",
     layout="wide",
@@ -35,163 +39,147 @@ st.set_page_config(
 st.markdown(
     f"""
     <style>
-    .stApp {{
-        background: #FFFFFF;
-        color: {DARK};
-    }}
+        .stApp {{
+            background: #FFFFFF;
+            color: {DARK};
+        }}
 
-    .block-container {{
-        max-width: 1440px;
-        padding-top: 2.2rem;
-        padding-bottom: 3rem;
-    }}
+        .block-container {{
+            max-width: 1440px;
+            padding-top: 2.2rem;
+            padding-bottom: 3rem;
+        }}
 
-    .dashboard-header {{
-        border-bottom: 1px solid {BORDER};
-        padding-bottom: 18px;
-        margin-bottom: 22px;
-    }}
+        .dashboard-header {{
+            border-bottom: 1px solid {BORDER};
+            padding-bottom: 18px;
+            margin-bottom: 22px;
+        }}
 
-    .dashboard-title {{
-        color: {DARK};
-        font-size: 2.15rem;
-        font-weight: 750;
-        letter-spacing: -0.04em;
-        line-height: 1.2;
-        margin: 0;
-    }}
+        .dashboard-title {{
+            color: {DARK};
+            font-size: 2.15rem;
+            font-weight: 750;
+            letter-spacing: -0.04em;
+            line-height: 1.2;
+            margin: 0;
+        }}
 
-    .dashboard-title .purple {{
-        color: {PURPLE};
-    }}
+        .dashboard-title .purple {{
+            color: {PURPLE};
+        }}
 
-    .brand-line {{
-        width: 66px;
-        height: 4px;
-        border-radius: 4px;
-        background: linear-gradient(90deg, {PURPLE}, {MINT});
-        margin-top: 14px;
-    }}
+        .brand-line {{
+            width: 66px;
+            height: 4px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, {PURPLE}, {MINT});
+            margin-top: 14px;
+        }}
 
-    .section-heading {{
-        color: {DARK};
-        font-size: 1.15rem;
-        font-weight: 700;
-        border-left: 4px solid {PURPLE};
-        padding-left: 10px;
-        margin: 18px 0 14px 0;
-    }}
+        .section-heading {{
+            color: {DARK};
+            font-size: 1.15rem;
+            font-weight: 700;
+            border-left: 4px solid {PURPLE};
+            padding-left: 10px;
+            margin: 18px 0 14px 0;
+        }}
 
-    .subsection-heading {{
-        color: {DARK};
-        font-size: 1rem;
-        font-weight: 700;
-        margin: 18px 0 10px 0;
-    }}
+        .subsection-heading {{
+            color: {DARK};
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 18px 0 10px 0;
+        }}
 
-    .kpi-card {{
-        background: #FFFFFF;
-        border: 1px solid {BORDER};
-        border-top: 3px solid {PURPLE};
-        border-radius: 12px;
-        padding: 18px 20px;
-        min-height: 112px;
-        text-align: center;
-    }}
+        .kpi-card {{
+            background: #FFFFFF;
+            border: 1px solid {BORDER};
+            border-top: 3px solid {PURPLE};
+            border-radius: 12px;
+            padding: 18px 20px;
+            min-height: 112px;
+            text-align: center;
+        }}
 
-    .kpi-card.mint {{
-        border-top-color: {MINT};
-    }}
+        .kpi-card.mint {{
+            border-top-color: {MINT};
+        }}
 
-    .kpi-label {{
-        color: {MUTED};
-        font-size: 0.88rem;
-        font-weight: 600;
-        margin-bottom: 12px;
-    }}
+        .kpi-label {{
+            color: {MUTED};
+            font-size: 0.88rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }}
 
-    .kpi-value {{
-        color: {DARK};
-        font-size: 1.65rem;
-        font-weight: 750;
-        letter-spacing: -0.035em;
-        line-height: 1.15;
-    }}
+        .kpi-value {{
+            color: {DARK};
+            font-size: 1.65rem;
+            font-weight: 750;
+            letter-spacing: -0.035em;
+            line-height: 1.15;
+        }}
 
-    .kpi-note {{
-        color: {MUTED};
-        font-size: 0.78rem;
-        margin-top: 7px;
-        line-height: 1.5;
-    }}
+        .kpi-note {{
+            color: {MUTED};
+            font-size: 0.78rem;
+            margin-top: 7px;
+            line-height: 1.5;
+        }}
 
-    .info-note {{
-        color: {MUTED};
-        font-size: 0.88rem;
-        background: {LIGHT_PURPLE};
-        border-left: 3px solid {MINT};
-        border-radius: 6px;
-        padding: 10px 13px;
-        margin: 10px 0 14px 0;
-        line-height: 1.65;
-    }}
+        .info-note {{
+            color: {MUTED};
+            font-size: 0.88rem;
+            background: {LIGHT_PURPLE};
+            border-left: 3px solid {MINT};
+            border-radius: 6px;
+            padding: 10px 13px;
+            margin: 10px 0 14px 0;
+            line-height: 1.65;
+        }}
 
-    .stTabs [data-baseweb="tab-list"] {{
-        gap: 8px;
-        border-bottom: 1px solid {BORDER};
-    }}
+        .stTabs [data-baseweb="tab-list"] {{
+            gap: 8px;
+            border-bottom: 1px solid {BORDER};
+        }}
 
-    .stTabs [data-baseweb="tab"] {{
-        height: 46px;
-        color: {MUTED};
-        font-weight: 650;
-        padding: 0 18px;
-        border-radius: 8px 8px 0 0;
-    }}
+        .stTabs [data-baseweb="tab"] {{
+            height: 46px;
+            color: {MUTED};
+            font-weight: 650;
+            padding: 0 18px;
+            border-radius: 8px 8px 0 0;
+        }}
 
-    .stTabs [aria-selected="true"] {{
-        color: {PURPLE} !important;
-        background-color: {LIGHT_PURPLE};
-    }}
+        .stTabs [aria-selected="true"] {{
+            color: {PURPLE} !important;
+            background-color: {LIGHT_PURPLE};
+        }}
 
-    .stTabs [data-baseweb="tab-highlight"] {{
-        background-color: {PURPLE};
-    }}
+        .stTabs [data-baseweb="tab-highlight"] {{
+            background-color: {PURPLE};
+        }}
     </style>
     """,
     unsafe_allow_html=True,
 )
 
 
-# ==================================================
+# =========================================================
 # 공통 함수
-# ==================================================
-def clean_code(series):
-    return series.astype("string").str.strip()
-
-
-def to_numeric(series):
-    cleaned = (
-        series.astype(str)
-        .str.replace(",", "", regex=False)
-        .str.replace(r"[^0-9.\-]", "", regex=True)
-    )
-    return pd.to_numeric(cleaned, errors="coerce").fillna(0)
-
-
-def format_won(value):
-    return f"{value:,.0f}원"
-
-
+# =========================================================
 def find_column(dataframe, candidates, sheet_name, purpose):
-    columns = {
+    """후보 목록에서 실제 데이터프레임의 컬럼명을 찾습니다."""
+    column_lookup = {
         str(column).strip(): column
         for column in dataframe.columns
     }
 
     for candidate in candidates:
-        if candidate in columns:
-            return columns[candidate]
+        if candidate in column_lookup:
+            return column_lookup[candidate]
 
     st.error(
         f"'{sheet_name}' 시트에서 {purpose} 컬럼을 찾지 못했습니다."
@@ -203,125 +191,49 @@ def find_column(dataframe, candidates, sheet_name, purpose):
     st.stop()
 
 
-def load_sales_sheet(
-    file_path,
-    sheet_name,
-    revenue_candidates,
-    revenue_name,
-):
-    try:
-        dataframe = pd.read_excel(
-            file_path,
-            sheet_name=sheet_name,
-            header=1,
-        )
-    except Exception as error:
-        st.error(f"'{sheet_name}' 시트를 읽지 못했습니다: {error}")
-        st.stop()
+def numeric_series(series):
+    """쉼표, 원 기호 등이 포함된 값을 숫자로 변환합니다."""
+    text = series.astype("string").str.strip()
+    text = text.str.replace(",", "", regex=False)
+    text = text.str.replace("원", "", regex=False)
+    text = text.str.replace(r"[^0-9.\-]", "", regex=True)
+    return pd.to_numeric(text, errors="coerce")
 
-    dataframe.columns = [
-        str(column).strip()
-        for column in dataframe.columns
-    ]
 
-    code_column = find_column(
-        dataframe,
-        ["대리점코드", "대리점 코드", "채널코드"],
-        sheet_name,
-        "대리점 코드",
-    )
-    revenue_column = find_column(
-        dataframe,
-        revenue_candidates,
-        sheet_name,
-        revenue_name,
+def clean_code(series):
+    """대리점코드를 문자열로 정리합니다."""
+    return (
+        series.astype("string")
+        .str.strip()
+        .str.replace(r"\.0$", "", regex=True)
     )
 
-    rename_map = {
-        code_column: "_대리점코드",
-        revenue_column: "_원본매출",
-    }
 
-    aliases = {
-        "담당실": ["담당실", "영업실", "담당영업실"],
-        "담당팀": ["담당팀", "영업팀", "담당영업팀"],
-        "담당세일즈": ["담당세일즈", "담당 세일즈", "세일즈"],
-        "대리점명": ["대리점한글명", "대리점명", "대리점 이름"],
-    }
-
-    for standard_name, candidates in aliases.items():
-        for candidate in candidates:
-            if candidate in dataframe.columns:
-                rename_map[candidate] = standard_name
-                break
-
-    dataframe = dataframe.rename(columns=rename_map).copy()
-    dataframe = dataframe.dropna(how="all")
-
-    fill_columns = [
-        column
-        for column in ["담당실", "담당팀", "담당세일즈"]
-        if column in dataframe.columns
-    ]
-    if fill_columns:
-        dataframe[fill_columns] = dataframe[fill_columns].ffill()
-
-    dataframe["_대리점코드"] = clean_code(
-        dataframe["_대리점코드"]
-    )
-    dataframe["매출"] = to_numeric(dataframe["_원본매출"])
-
-    dataframe = dataframe[
-        dataframe["_대리점코드"].notna()
-        & dataframe["_대리점코드"].ne("")
-    ].copy()
-
-    if dataframe.empty:
-        st.error(f"'{sheet_name}' 시트에 집계할 데이터가 없습니다.")
-        st.stop()
-
-    return dataframe
+def format_won(value):
+    return f"{float(value):,.0f}원"
 
 
-def filter_agency_search(dataframe, search_text, searchable_columns):
-    """
-    검색어가 '영업1실'처럼 '실'로 끝나면 담당실을 정확히 일치시킵니다.
-    그 외 검색어는 지정한 컬럼에서 부분 일치로 검색합니다.
-    """
-    search_text = str(search_text).strip().casefold()
+def format_number(value):
+    if pd.isna(value):
+        return ""
 
-    if not search_text:
-        return dataframe.copy()
+    if isinstance(value, numbers.Integral):
+        return f"{value:,}"
 
-    if search_text.endswith("실") and "담당실" in dataframe.columns:
-        office_values = (
-            dataframe["담당실"]
-            .fillna("")
-            .astype(str)
-            .str.strip()
-            .str.casefold()
-        )
-        return dataframe[office_values.eq(search_text)].copy()
+    if isinstance(value, numbers.Real):
+        value = float(value)
+        if value.is_integer():
+            return f"{int(value):,}"
+        return f"{value:,.2f}".rstrip("0").rstrip(".")
 
-    available_columns = [
-        column
-        for column in searchable_columns
-        if column in dataframe.columns
-    ]
+    return str(value)
 
-    if not available_columns:
-        return dataframe.iloc[0:0].copy()
 
-    search_mask = dataframe[available_columns].apply(
-        lambda column: (
-            column.fillna("")
-            .astype(str)
-            .str.casefold()
-            .str.contains(search_text, na=False, regex=False)
-        )
-    ).any(axis=1)
-
-    return dataframe[search_mask].copy()
+def safe_display_value(value):
+    """HTML 표 셀에 표시할 값을 안전한 문자열로 반환합니다."""
+    if pd.isna(value):
+        return ""
+    return escape(format_number(value))
 
 
 def render_kpi(label, value, note="", accent="purple"):
@@ -344,23 +256,176 @@ def render_kpi(label, value, note="", accent="purple"):
     )
 
 
-def safe_display_value(value):
-    """숫자는 천 단위 쉼표로 표시하고 문자열은 그대로 출력합니다."""
-    if pd.isna(value):
-        return ""
+def load_sales_sheet(
+    file_path,
+    sheet_name,
+    revenue_candidates,
+    revenue_name,
+):
+    """
+    실매출·보정매출·휴일예약 시트를 읽어 공통 컬럼명으로 정리합니다.
+    실매출 시트는 header=1 기준의 새 컬럼 구조를 지원합니다.
+    """
+    try:
+        dataframe = pd.read_excel(
+            file_path,
+            sheet_name=sheet_name,
+            header=1,
+        )
+    except Exception as error:
+        st.error(f"'{sheet_name}' 시트를 읽지 못했습니다: {error}")
+        st.stop()
 
-    if isinstance(value, numbers.Integral) and not isinstance(value, bool):
-        display = f"{value:,}"
-    elif isinstance(value, numbers.Real) and not isinstance(value, bool):
-        numeric_value = float(value)
-        if numeric_value.is_integer():
-            display = f"{int(numeric_value):,}"
-        else:
-            display = f"{numeric_value:,.10f}".rstrip("0").rstrip(".")
-    else:
-        display = str(value)
+    dataframe.columns = [
+        str(column).strip()
+        for column in dataframe.columns
+    ]
+    dataframe = dataframe.dropna(how="all").copy()
 
-    return escape(display)
+    code_column = find_column(
+        dataframe,
+        ["대리점코드", "대리점 코드", "채널코드"],
+        sheet_name,
+        "대리점 코드",
+    )
+
+    revenue_column = find_column(
+        dataframe,
+        revenue_candidates,
+        sheet_name,
+        revenue_name,
+    )
+
+    # 새 실매출 시트와 기존 시트에서 쓰는 컬럼명을 함께 지원합니다.
+    aliases = {
+        "본부": ["본부", "담당본부"],
+        "담당실": ["담당실", "영업실", "담당영업실"],
+        "담당팀": ["담당팀", "영업팀", "담당영업팀"],
+        "담당세일즈": ["담당세일즈", "담당 세일즈", "세일즈"],
+        "대리점명": ["대리점한글명", "대리점명", "대리점 이름"],
+    }
+
+    rename_map = {
+        code_column: "_대리점코드",
+        revenue_column: "_원본매출",
+    }
+
+    for standard_name, candidates in aliases.items():
+        for candidate in candidates:
+            if candidate in dataframe.columns:
+                rename_map[candidate] = standard_name
+                break
+
+    dataframe = dataframe.rename(columns=rename_map).copy()
+
+    if "_대리점코드" not in dataframe.columns:
+        st.error(f"'{sheet_name}' 시트에 대리점코드가 없습니다.")
+        st.stop()
+
+    dataframe["_대리점코드"] = clean_code(
+        dataframe["_대리점코드"]
+    )
+    dataframe["매출"] = numeric_series(
+        dataframe["_원본매출"]
+    ).fillna(0)
+
+    # 본부/실/팀 등 구분 컬럼에 병합된 셀이 있으면 위 값을 이어받습니다.
+    hierarchy_columns = [
+        column
+        for column in [
+            "본부",
+            "담당실",
+            "담당팀",
+            "담당세일즈",
+        ]
+        if column in dataframe.columns
+    ]
+
+    if hierarchy_columns:
+        dataframe[hierarchy_columns] = (
+            dataframe[hierarchy_columns].ffill()
+        )
+
+    dataframe = dataframe[
+        dataframe["_대리점코드"].notna()
+        & dataframe["_대리점코드"].ne("")
+    ].copy()
+
+    for column in [
+        "본부",
+        "담당실",
+        "담당팀",
+        "담당세일즈",
+        "대리점명",
+    ]:
+        if column in dataframe.columns:
+            dataframe[column] = (
+                dataframe[column]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+            )
+
+    if dataframe.empty:
+        st.error(f"'{sheet_name}' 시트에 표시할 데이터가 없습니다.")
+        st.stop()
+
+    return dataframe
+
+
+def filter_agency_search(
+    dataframe,
+    search_text,
+    searchable_columns,
+):
+    """
+    검색어가 '영업1실'처럼 '실'로 끝나면 담당실을 정확히 비교합니다.
+    그 외 검색어는 지정 컬럼에서 부분 일치로 검색합니다.
+    """
+    search_text = str(search_text).strip().casefold()
+
+    if not search_text:
+        return dataframe.copy()
+
+    office_column = None
+    for candidate in ["담당실", "영업실"]:
+        if candidate in dataframe.columns:
+            office_column = candidate
+            break
+
+    if search_text.endswith("실") and office_column:
+        office_values = (
+            dataframe[office_column]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.casefold()
+        )
+        return dataframe[office_values.eq(search_text)].copy()
+
+    available_columns = [
+        column
+        for column in searchable_columns
+        if column in dataframe.columns
+    ]
+
+    if not available_columns:
+        return dataframe.iloc[0:0].copy()
+
+    mask = dataframe[available_columns].apply(
+        lambda column: (
+            column.fillna("")
+            .astype(str)
+            .str.casefold()
+            .str.contains(
+                search_text,
+                na=False,
+                regex=False,
+            )
+        )
+    ).any(axis=1)
+
+    return dataframe[mask].copy()
 
 
 def render_html_table(
@@ -370,8 +435,13 @@ def render_html_table(
     column_widths=None,
     min_table_width=None,
     max_height=560,
+    fit_width=False,
+    compact=False,
 ):
-    """독립 스크롤을 가진 HTML 표를 렌더링합니다."""
+    """
+    표를 HTML로 표시합니다.
+    fit_width=True인 경우 표를 화면 너비에 맞추고 가로 스크롤을 숨깁니다.
+    """
     right_align_columns = set(right_align_columns or [])
     left_align_columns = set(left_align_columns or [])
     column_widths = column_widths or {}
@@ -411,7 +481,36 @@ def render_html_table(
 
         rows.append(f"<tr>{''.join(cells)}</tr>")
 
-    table_min_width = min_table_width or "100%"
+    if fit_width:
+        table_width_css = """
+            width: 100%;
+            min-width: 100%;
+            table-layout: fixed;
+        """
+        overflow_x = "hidden"
+        cell_wrap_css = """
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: keep-all;
+        """
+    else:
+        table_min_width = min_table_width or "100%"
+        table_width_css = f"""
+            width: max-content;
+            min-width: {table_min_width};
+            table-layout: auto;
+        """
+        overflow_x = "auto"
+        cell_wrap_css = "white-space: nowrap;"
+
+    if compact:
+        font_size = "12px"
+        header_padding = "8px 5px"
+        cell_padding = "7px 5px"
+    else:
+        font_size = "14px"
+        header_padding = "11px 12px"
+        cell_padding = "10px 12px"
 
     html = f"""
     <!DOCTYPE html>
@@ -419,15 +518,17 @@ def render_html_table(
     <head>
         <meta charset="utf-8">
         <style>
-            * {{ box-sizing: border-box; }}
+            * {{
+                box-sizing: border-box;
+            }}
 
             html, body {{
                 margin: 0;
                 padding: 0;
                 width: 100%;
                 height: 100%;
-                font-family: Pretendard, -apple-system, BlinkMacSystemFont,
-                             "Segoe UI", sans-serif;
+                font-family: Pretendard, -apple-system,
+                             BlinkMacSystemFont, "Segoe UI", sans-serif;
                 color: {DARK};
                 background: transparent;
             }}
@@ -435,7 +536,7 @@ def render_html_table(
             .table-scroll {{
                 width: 100%;
                 height: 100%;
-                overflow-x: auto;
+                overflow-x: {overflow_x};
                 overflow-y: auto;
                 scrollbar-gutter: stable;
                 border: 1px solid {BORDER};
@@ -443,9 +544,63 @@ def render_html_table(
                 background: #FFFFFF;
             }}
 
+            table {{
+                {table_width_css}
+                border-collapse: collapse;
+                font-size: {font_size};
+            }}
+
+            thead th {{
+                position: sticky;
+                top: 0;
+                z-index: 1;
+                padding: {header_padding};
+                background: #F8F7FA;
+                color: {MUTED};
+                font-weight: 600;
+                text-align: center;
+                border-bottom: 1px solid {BORDER};
+                border-right: 1px solid {BORDER};
+                white-space: normal;
+                line-height: 1.35;
+                overflow-wrap: anywhere;
+                word-break: keep-all;
+            }}
+
+            tbody td {{
+                padding: {cell_padding};
+                background: #FFFFFF;
+                border-bottom: 1px solid #E8E8EB;
+                border-right: 1px solid #E8E8EB;
+                vertical-align: middle;
+                line-height: 1.4;
+                {cell_wrap_css}
+            }}
+
+            tbody tr:last-child td {{
+                border-bottom: 0;
+            }}
+
+            thead th:last-child,
+            tbody td:last-child {{
+                border-right: 0;
+            }}
+
+            tbody td.align-center {{
+                text-align: center;
+            }}
+
+            tbody td.align-left {{
+                text-align: left;
+            }}
+
+            tbody td.align-right {{
+                text-align: right;
+            }}
+
             .table-scroll::-webkit-scrollbar {{
-                width: 12px;
-                height: 12px;
+                width: 10px;
+                height: 10px;
             }}
 
             .table-scroll::-webkit-scrollbar-track {{
@@ -458,46 +613,6 @@ def render_html_table(
                 border: 2px solid #F1EFF5;
                 border-radius: 6px;
             }}
-
-            table {{
-                width: max-content;
-                min-width: {table_min_width};
-                border-collapse: collapse;
-                table-layout: auto;
-                font-size: 14px;
-            }}
-
-            thead th {{
-                position: sticky;
-                top: 0;
-                z-index: 1;
-                padding: 11px 12px;
-                background: #F8F7FA;
-                color: {MUTED};
-                font-weight: 600;
-                text-align: center;
-                border-bottom: 1px solid {BORDER};
-                border-right: 1px solid {BORDER};
-                white-space: nowrap;
-            }}
-
-            tbody td {{
-                padding: 10px 12px;
-                background: #FFFFFF;
-                border-bottom: 1px solid #E8E8EB;
-                border-right: 1px solid #E8E8EB;
-                vertical-align: middle;
-                line-height: 1.5;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }}
-
-            tbody tr:last-child td {{ border-bottom: 0; }}
-            thead th:last-child, tbody td:last-child {{ border-right: 0; }}
-            tbody td.align-center {{ text-align: center; }}
-            tbody td.align-left {{ text-align: left; }}
-            tbody td.align-right {{ text-align: right; }}
         </style>
     </head>
     <body>
@@ -512,9 +627,10 @@ def render_html_table(
     </html>
     """
 
+    row_height = 35 if compact else 43
     content_height = min(
         max_height,
-        44 + len(dataframe) * 43 + 4,
+        44 + len(dataframe) * row_height + 4,
     )
 
     components.html(
@@ -524,49 +640,101 @@ def render_html_table(
     )
 
 
-def render_promotion_overview():
-    rows = [
+def sort_controls(
+    dataframe,
+    numeric_columns,
+    key_prefix,
+    label="정렬",
+    default_column=None,
+):
+    """숫자형 정렬 기준과 오름차순/내림차순 컨트롤을 표시합니다."""
+    available_columns = [
+        column
+        for column in numeric_columns
+        if column in dataframe.columns
+    ]
+
+    if not available_columns:
+        return dataframe.copy(), None, "내림차순"
+
+    if default_column not in available_columns:
+        default_column = available_columns[0]
+
+    left, right = st.columns([2, 1])
+
+    with left:
+        sort_column = st.selectbox(
+            f"{label} 기준",
+            options=available_columns,
+            index=available_columns.index(default_column),
+            key=f"{key_prefix}_sort_column",
+        )
+
+    with right:
+        sort_order = st.selectbox(
+            f"{label} 순서",
+            options=["내림차순", "오름차순"],
+            index=0,
+            key=f"{key_prefix}_sort_order",
+        )
+
+    result = dataframe.copy()
+    result["_정렬용값"] = numeric_series(result[sort_column])
+
+    result = (
+        result
+        .sort_values(
+            "_정렬용값",
+            ascending=(sort_order == "오름차순"),
+            na_position="last",
+            kind="stable",
+        )
+        .drop(columns="_정렬용값")
+    )
+
+    return result, sort_column, sort_order
+
+
+def render_overview_table():
+    """프로모션 개요 표를 표시합니다."""
+    overview = [
         ("최초예약일", "2026년 10월 1일 ~ 2026년 11월 30일"),
         ("출발일", "2026년 10월 1일 ~ 2027년 2월 28일"),
         ("속성", "ALL 속성 (Q 제외)"),
         (
-            "제외",
-            "인센티브, 코브랜드, 닷컴, 랜드온리, 업무포탈, 항공, "
-            "FND, 호텔, 유아, 취소예약 제외",
+            "인정배수",
+            "Z/U(제우스·우리끼리) 2배, "
+            "P(스탠다드·프리미엄) 1.5배, "
+            "기타 ALL 속성 1배, 휴일예약 1.5배",
         ),
         (
-            "선정",
-            "상품속성 및 휴일 판매 여부에 따라 인정배수를 차등 적용",
+            "VI 지급",
+            "매출 및 성장률 1~10위 대상. "
+            "보정매출 131,612,240원 미만 대리점은 지급 대상에서 제외",
         ),
     ]
 
-    payout_lines = [
-        "1) 프로모션 종료 후 인정배수 적용 매출을 기준으로 매출 및 성장률 순위 산정",
-        "2) 매출순위 및 매출성장률 기준 1위 ~ 10위 대리점 대상 VI 지급",
-        "3) 최소 매출 허들 131,612,240원 미달 대리점은 지급 대상에서 제외",
-        "4) 매출순위와 매출성장률 기준을 동시에 충족하면 지급액이 높은 기준 1개 적용",
-    ]
-
-    body = "".join(
-        f"<tr><td>{escape(label)}</td><td>{escape(content)}</td></tr>"
-        for label, content in rows
+    rows = "".join(
+        "<tr>"
+        f"<td>{escape(label)}</td>"
+        f"<td>{escape(content)}</td>"
+        "</tr>"
+        for label, content in overview
     )
-    payout = "<br>".join(escape(line) for line in payout_lines)
-    body += f"<tr><td>지급</td><td>{payout}</td></tr>"
 
     st.markdown(
         f"""
-        <div style="width:100%;overflow-x:auto;border:1px solid {BORDER};
-                    border-radius:10px;margin-bottom:12px;">
-            <table style="width:100%;border-collapse:collapse;color:{DARK};
-                          background:#FFFFFF;font-size:14px;">
+        <div style="width:100%; overflow-x:auto; border:1px solid {BORDER};
+                    border-radius:10px; margin-bottom:12px;">
+            <table style="width:100%; border-collapse:collapse;
+                          color:{DARK}; background:#FFFFFF; font-size:14px;">
                 <thead>
                     <tr style="background:{LIGHT_PURPLE};">
                         <th style="padding:10px 14px;">구분</th>
                         <th style="padding:10px 14px;">내용</th>
                     </tr>
                 </thead>
-                <tbody>{body}</tbody>
+                <tbody>{rows}</tbody>
             </table>
         </div>
         <style>
@@ -582,13 +750,14 @@ def render_promotion_overview():
     )
 
 
-def render_multiplier_rules():
+def render_multiplier_table():
+    """상품 속성별 인정 배수 표를 표시합니다."""
     st.markdown(
         f"""
-        <div style="width:100%;overflow-x:auto;border:1px solid {BORDER};
-                    border-radius:10px;margin-bottom:12px;">
-            <table style="width:100%;border-collapse:collapse;color:{DARK};
-                          background:#FFFFFF;font-size:14px;text-align:center;">
+        <div style="width:100%; overflow-x:auto; border:1px solid {BORDER};
+                    border-radius:10px; margin-bottom:12px;">
+            <table style="width:100%; border-collapse:collapse; color:{DARK};
+                          background:#FFFFFF; font-size:14px; text-align:center;">
                 <thead>
                     <tr style="background:{LIGHT_PURPLE};">
                         <th style="padding:10px;">상품 속성</th>
@@ -626,9 +795,9 @@ def render_multiplier_rules():
     )
 
 
-# ==================================================
-# 페이지 제목 및 프로모션 정보
-# ==================================================
+# =========================================================
+# 제목 및 프로모션 안내
+# =========================================================
 st.markdown(
     f"""
     <div class="dashboard-header">
@@ -649,13 +818,13 @@ st.markdown(
     '<div class="subsection-heading">프로모션 개요</div>',
     unsafe_allow_html=True,
 )
-render_promotion_overview()
+render_overview_table()
 
 st.markdown(
     '<div class="subsection-heading">상품 속성별 인정 배수</div>',
     unsafe_allow_html=True,
 )
-render_multiplier_rules()
+render_multiplier_table()
 
 st.markdown(
     '<div class="subsection-heading">VI 지급 기준</div>',
@@ -680,9 +849,9 @@ render_html_table(vi_df, max_height=420)
 st.divider()
 
 
-# ==================================================
-# 엑셀 파일 읽기
-# ==================================================
+# =========================================================
+# 엑셀 데이터 불러오기
+# =========================================================
 if not FILE_PATH.exists():
     st.error(f"엑셀 파일을 찾을 수 없습니다: {FILE_PATH}")
     st.stop()
@@ -690,14 +859,14 @@ if not FILE_PATH.exists():
 real_sales_df = load_sales_sheet(
     FILE_PATH,
     REAL_SALES_SHEET,
-    ["실매출", "매출", "실매출액"],
+    ["실매출", "실매출액", "매출"],
     "실매출",
 )
 
 adjusted_sales_df = load_sales_sheet(
     FILE_PATH,
     ADJUSTED_SALES_SHEET,
-    ["보정매출", "총보정매출", "보정 매출"],
+    ["총보정매출", "보정매출", "보정 매출"],
     "보정매출",
 )
 
@@ -714,15 +883,21 @@ try:
         sheet_name=MULTIPLIER_SHEET,
         header=1,
     ).dropna(how="all")
+
+    multiplier_source_df.columns = [
+        str(column).strip()
+        for column in multiplier_source_df.columns
+    ]
     multiplier_source_error = None
+
 except Exception as error:
     multiplier_source_df = None
     multiplier_source_error = str(error)
 
 
-# ==================================================
-# 대리점 채널 정보
-# ==================================================
+# =========================================================
+# 대리점 리스트 및 유통채널 정보
+# =========================================================
 try:
     agency_df = pd.read_excel(
         FILE_PATH,
@@ -738,32 +913,33 @@ agency_df.columns = [
     for column in agency_df.columns
 ]
 
-required_columns = ["대리점코드", "채널구분"]
-missing_columns = [
-    column
-    for column in required_columns
-    if column not in agency_df.columns
-]
-
-if missing_columns:
-    st.error(
-        f"'{AGENCY_SHEET}' 시트에서 필요한 컬럼을 찾지 못했습니다: "
-        + ", ".join(missing_columns)
-    )
-    st.caption(
-        "확인된 컬럼명: "
-        + ", ".join(map(str, agency_df.columns))
-    )
-    st.stop()
-
-agency_df["_대리점코드"] = clean_code(
-    agency_df["대리점코드"]
+agency_code_column = find_column(
+    agency_df,
+    ["대리점코드", "대리점 코드"],
+    AGENCY_SHEET,
+    "대리점 코드",
+)
+channel_column = find_column(
+    agency_df,
+    ["채널구분", "유통채널"],
+    AGENCY_SHEET,
+    "채널 구분",
 )
 
 channel_map = agency_df[
-    ["_대리점코드", "채널구분"]
+    [agency_code_column, channel_column]
 ].copy()
 
+channel_map = channel_map.rename(
+    columns={
+        agency_code_column: "_대리점코드",
+        channel_column: "채널구분",
+    }
+)
+
+channel_map["_대리점코드"] = clean_code(
+    channel_map["_대리점코드"]
+)
 channel_map["채널구분"] = (
     channel_map["채널구분"]
     .fillna("미분류")
@@ -793,22 +969,26 @@ real_sales_df["채널구분"] = (
 )
 
 
-# ==================================================
-# 매출 순위 데이터 구성
-# 보정매출 시트 기준으로 집계합니다.
-# ==================================================
-aggregations = {
+# =========================================================
+# 보정매출 기준 순위 데이터
+# =========================================================
+ranking_aggregations = {
     "보정매출": ("매출", "sum"),
 }
 
-for column in ["담당실", "담당팀", "담당세일즈", "대리점명"]:
+for column in [
+    "대리점명",
+    "담당실",
+    "담당팀",
+    "담당세일즈",
+]:
     if column in adjusted_sales_df.columns:
-        aggregations[column] = (column, "first")
+        ranking_aggregations[column] = (column, "first")
 
 sales_ranking = (
     adjusted_sales_df
     .groupby("_대리점코드", as_index=False)
-    .agg(**aggregations)
+    .agg(**ranking_aggregations)
     .sort_values("보정매출", ascending=False)
     .reset_index(drop=True)
 )
@@ -821,16 +1001,12 @@ sales_ranking.insert(
 
 for column in ["대리점명", "담당실", "담당팀", "담당세일즈"]:
     if column not in sales_ranking.columns:
-        if column == "대리점명":
-            sales_ranking[column] = sales_ranking["_대리점코드"]
-        else:
-            sales_ranking[column] = "미분류"
+        sales_ranking[column] = ""
 
 sales_ranking["대리점코드"] = (
     sales_ranking["_대리점코드"]
     .fillna("")
     .astype(str)
-    .str.replace(r"\.0$", "", regex=True)
 )
 sales_ranking["대리점명"] = (
     sales_ranking["대리점명"]
@@ -840,14 +1016,14 @@ sales_ranking["대리점명"] = (
 )
 
 
-# ==================================================
-# KPI — 실매출 기준
-# ==================================================
-total_agencies = real_sales_df["_대리점코드"].nunique()
+# =========================================================
+# KPI — 기존 기준에 따라 보정매출 사용
+# =========================================================
+total_agencies = sales_ranking["_대리점코드"].nunique()
 
-if "담당세일즈" in real_sales_df.columns:
+if "담당세일즈" in sales_ranking.columns:
     total_staff = (
-        real_sales_df["담당세일즈"]
+        sales_ranking["담당세일즈"]
         .dropna()
         .astype(str)
         .str.strip()
@@ -857,9 +1033,9 @@ if "담당세일즈" in real_sales_df.columns:
 else:
     total_staff = 0
 
-total_real_sales = real_sales_df["매출"].sum()
-average_real_sales = (
-    total_real_sales / total_agencies
+total_adjusted_sales = sales_ranking["보정매출"].sum()
+average_adjusted_sales = (
+    total_adjusted_sales / total_agencies
     if total_agencies
     else 0
 )
@@ -875,7 +1051,7 @@ with kpi1:
     render_kpi(
         "총 대리점 수",
         f"{total_agencies:,}개",
-        "유통점 (현대/홈플 제외) + 직계약 유통점 대상",
+        "보정매출 시트 기준",
     )
 
 with kpi2:
@@ -883,43 +1059,47 @@ with kpi2:
         "총 담당자 수",
         f"{total_staff:,}명",
         "담당 세일즈 수",
-        "mint",
+        accent="mint",
     )
 
 with kpi3:
     render_kpi(
-        "매출",
-        format_won(total_real_sales),
-        "실매출 탭 기준",
+        "총보정매출",
+        format_won(total_adjusted_sales),
+        "대리점별 보정매출 합계",
     )
 
 with kpi4:
     render_kpi(
-        "대리점당 평균 매출",
-        format_won(average_real_sales),
-        "",
-        "mint",
+        "대리점당 평균 보정매출",
+        format_won(average_adjusted_sales),
+        accent="mint",
     )
 
 
-# ==================================================
-# 탭 순서
-# ==================================================
-st.markdown("<br>", unsafe_allow_html=True)
-
-tab_ranking, tab_office, tab_channel, tab_holiday = st.tabs(
+# =========================================================
+# 탭 구성
+# =========================================================
+(
+    tab_ranking,
+    tab_office,
+    tab_channel,
+    tab_real_sales,
+    tab_holiday,
+) = st.tabs(
     [
         "매출 순위",
         "영업실별 매출현황",
         "유통채널별 매출현황",
+        "실매출",
         "휴일예약 매출 비중",
     ]
 )
 
 
-# ==================================================
-# 매출 순위
-# ==================================================
+# =========================================================
+# 매출 순위 탭
+# =========================================================
 with tab_ranking:
     st.markdown(
         '<div class="section-heading">매출 순위</div>',
@@ -929,8 +1109,9 @@ with tab_ranking:
     st.markdown(
         """
         <div class="info-note">
-            매출 순위는 보정매출 탭의 보정매출을 기준으로 산출합니다.
-            그 외 주요 실적 및 매출 현황은 실매출 탭 기준입니다.
+            매출 순위는 보정매출 시트의 보정매출을 기준으로 표시합니다.
+            대리점코드, 대리점명, 담당실, 담당팀, 담당세일즈로 검색할 수 있습니다.
+            담당실 검색은 정확히 일치하는 결과만 표시합니다.
         </div>
         """,
         unsafe_allow_html=True,
@@ -942,17 +1123,17 @@ with tab_ranking:
         key="ranking_search",
     )
 
-    ranking_columns = [
-        "순위",
-        "대리점코드",
-        "대리점명",
-        "담당실",
-        "담당팀",
-        "담당세일즈",
-        "보정매출",
-    ]
-
-    ranking_table = sales_ranking[ranking_columns].copy()
+    ranking_table = sales_ranking[
+        [
+            "순위",
+            "대리점코드",
+            "대리점명",
+            "담당실",
+            "담당팀",
+            "담당세일즈",
+            "보정매출",
+        ]
+    ].copy()
 
     if ranking_search.strip():
         ranking_table = filter_agency_search(
@@ -967,18 +1148,30 @@ with tab_ranking:
             ],
         )
 
-    ranking_table["보정매출"] = ranking_table["보정매출"].map(
-        format_won
+    ranking_table, ranking_sort_column, ranking_sort_order = sort_controls(
+        ranking_table,
+        numeric_columns=["순위", "보정매출"],
+        key_prefix="ranking",
+        label="정렬",
+        default_column="보정매출",
     )
 
-    if ranking_search.strip():
-        st.caption(f"검색 결과 {len(ranking_table):,}건")
+    st.caption(
+        f"검색 결과 {len(ranking_table):,}건 · "
+        f"정렬 기준: {ranking_sort_column or '없음'} · "
+        f"정렬 순서: {ranking_sort_order}"
+    )
 
     if ranking_table.empty:
         st.info("검색 조건에 맞는 매출 순위가 없습니다.")
     else:
+        ranking_display = ranking_table.copy()
+        ranking_display["보정매출"] = (
+            ranking_display["보정매출"].map(format_won)
+        )
+
         render_html_table(
-            ranking_table,
+            ranking_display,
             left_align_columns=["대리점명"],
             right_align_columns=["보정매출"],
             column_widths={
@@ -1005,37 +1198,29 @@ with tab_ranking:
             f"{multiplier_source_error}"
         )
     elif multiplier_source_df.empty:
-        st.info(
-            f"'{MULTIPLIER_SHEET}' 시트에 표시할 데이터가 없습니다."
-        )
+        st.info("매출 배수적용 시트에 표시할 데이터가 없습니다.")
     else:
-        source_display_df = multiplier_source_df.copy()
-        source_display_df.columns = [
-            str(column).strip()
-            for column in source_display_df.columns
-        ]
-
-        source_column_width = 180
+        source_width = 180
         source_min_width = max(
             1200,
-            source_column_width * len(source_display_df.columns),
+            source_width * len(multiplier_source_df.columns),
         )
         source_widths = {
-            column: f"{source_column_width}px"
-            for column in source_display_df.columns
+            column: f"{source_width}px"
+            for column in multiplier_source_df.columns
         }
 
         render_html_table(
-            source_display_df,
+            multiplier_source_df,
             column_widths=source_widths,
             min_table_width=f"{source_min_width}px",
             max_height=560,
         )
 
 
-# ==================================================
-# 영업실별 매출현황
-# ==================================================
+# =========================================================
+# 영업실별 매출현황 탭
+# =========================================================
 with tab_office:
     st.markdown(
         '<div class="section-heading">영업실별 매출현황</div>',
@@ -1044,8 +1229,8 @@ with tab_office:
 
     if "담당실" not in real_sales_df.columns:
         st.warning(
-            "'실매출' 시트에 담당실 컬럼이 없어 "
-            "영업실별 매출현황을 표시할 수 없습니다."
+            "실매출 시트에서 영업실 컬럼을 찾지 못해 "
+            "영업실별 현황을 표시할 수 없습니다."
         )
     else:
         office_summary = (
@@ -1084,15 +1269,15 @@ with tab_office:
             marker_line_width=0,
             hovertemplate=(
                 "<b>%{x}</b><br>"
-                "매출: %{y:,.0f}원"
+                "실매출: %{y:,.0f}원"
                 "<extra></extra>"
             ),
         )
 
         office_chart.update_layout(
             showlegend=False,
-            xaxis_title="영업실",
-            yaxis_title="매출",
+            xaxis_title="담당실",
+            yaxis_title="실매출",
             yaxis_tickformat=",.0f",
             plot_bgcolor="#FFFFFF",
             paper_bgcolor="#FFFFFF",
@@ -1108,20 +1293,23 @@ with tab_office:
         )
 
         office_table = office_summary.rename(
-            columns={"담당실": "영업실"}
+            columns={
+                "담당실": "영업실",
+                "매출": "실매출",
+            }
         ).copy()
-        office_table["매출"] = office_table["매출"].map(format_won)
+        office_table["실매출"] = office_table["실매출"].map(format_won)
 
         render_html_table(
             office_table,
-            right_align_columns=["매출"],
+            right_align_columns=["실매출"],
             max_height=440,
         )
 
 
-# ==================================================
-# 유통채널별 매출현황
-# ==================================================
+# =========================================================
+# 유통채널별 매출현황 탭
+# =========================================================
 def normalize_channel_name(value):
     if pd.isna(value):
         return ""
@@ -1166,17 +1354,14 @@ with tab_channel:
     st.markdown(
         """
         <div class="info-note">
-            유통채널별 매출은 실매출 탭 기준으로 집계합니다.
-            롯데백화점과 롯데백화점(몰)은 합산하며,
-            지정되지 않은 채널은 기타로 합산합니다.
-            그래프의 기타 영역에 마우스를 올리면 세부 채널별 구성비를 확인할 수 있습니다.
+            유통채널별 매출은 실매출 시트를 기준으로 집계합니다.
+            그래프의 기타 영역에 마우스를 올리면 세부 채널 구성비를 확인할 수 있습니다.
         </div>
         """,
         unsafe_allow_html=True,
     )
 
     channel_source = real_sales_df.copy()
-
     channel_source["세부채널"] = (
         channel_source["채널구분"]
         .fillna("")
@@ -1188,8 +1373,8 @@ with tab_channel:
         "세부채널",
     ] = "미분류"
 
-    channel_source["유통채널"] = channel_source["채널구분"].apply(
-        classify_channel
+    channel_source["유통채널"] = (
+        channel_source["채널구분"].apply(classify_channel)
     )
 
     channel_summary = (
@@ -1207,7 +1392,9 @@ with tab_channel:
         "기타",
     ]
 
-    channel_summary["_정렬순서"] = channel_summary["유통채널"].map(
+    channel_summary["_정렬순서"] = channel_summary[
+        "유통채널"
+    ].map(
         {
             channel: index
             for index, channel in enumerate(channel_order)
@@ -1230,10 +1417,10 @@ with tab_channel:
         "기타": "#A9A5B3",
     }
 
-    channel_revenue_total = channel_summary["매출"].sum()
+    total_channel_sales = channel_summary["매출"].sum()
 
-    if channel_summary.empty or channel_revenue_total == 0:
-        st.info("표시할 유통채널별 매출 집계 결과가 없습니다.")
+    if channel_summary.empty or total_channel_sales == 0:
+        st.info("표시할 유통채널별 매출 데이터가 없습니다.")
     else:
         other_detail = (
             channel_source[
@@ -1244,40 +1431,32 @@ with tab_channel:
             .sort_values(ascending=False)
         )
 
-        other_revenue_total = other_detail.sum()
+        total_other_sales = other_detail.sum()
 
-        if other_revenue_total > 0:
-            other_detail_lines = []
+        if total_other_sales > 0:
+            detail_lines = []
 
-            for detail_name, detail_revenue in other_detail.items():
-                share_of_total = (
-                    detail_revenue / channel_revenue_total * 100
-                )
-                share_of_other = (
-                    detail_revenue / other_revenue_total * 100
-                )
+            for name, value in other_detail.items():
+                total_share = value / total_channel_sales * 100
+                other_share = value / total_other_sales * 100
 
-                other_detail_lines.append(
-                    f"{escape(str(detail_name))}: "
-                    f"전체 매출 {share_of_total:.2f}% · "
-                    f"기타 내 {share_of_other:.2f}%"
+                detail_lines.append(
+                    f"{escape(str(name))}: "
+                    f"전체 매출 {total_share:.2f}% · "
+                    f"기타 내 {other_share:.2f}%"
                 )
 
-            other_hover_detail = (
+            other_hover = (
                 "<b>기타 세부 구성</b><br>"
-                + "<br>".join(other_detail_lines)
+                + "<br>".join(detail_lines)
             )
         else:
-            other_hover_detail = ""
+            other_hover = ""
 
-        channel_summary["hover_detail"] = channel_summary[
+        channel_summary["기타 상세"] = channel_summary[
             "유통채널"
         ].apply(
-            lambda channel: (
-                other_hover_detail
-                if channel == "기타"
-                else ""
-            )
+            lambda name: other_hover if name == "기타" else ""
         )
 
         channel_chart = px.pie(
@@ -1285,12 +1464,10 @@ with tab_channel:
             names="유통채널",
             values="매출",
             hole=0.56,
-            category_orders={
-                "유통채널": channel_order,
-            },
+            category_orders={"유통채널": channel_order},
             color="유통채널",
             color_discrete_map=channel_colors,
-            custom_data=["hover_detail"],
+            custom_data=["기타 상세"],
         )
 
         channel_chart.update_traces(
@@ -1298,17 +1475,14 @@ with tab_channel:
             texttemplate="%{label}<br>%{percent}",
             marker=dict(
                 colors=[
-                    channel_colors[channel]
-                    for channel in channel_summary["유통채널"]
+                    channel_colors[name]
+                    for name in channel_summary["유통채널"]
                 ],
-                line=dict(
-                    color="#A9A5B3",
-                    width=1.5,
-                ),
+                line=dict(color="#A9A5B3", width=1.5),
             ),
             hovertemplate=(
                 "<b>%{label}</b><br>"
-                "매출: %{value:,.0f}원<br>"
+                "실매출: %{value:,.0f}원<br>"
                 "전체 구성비: %{percent}"
                 "<br>%{customdata[0]}"
                 "<extra></extra>"
@@ -1331,25 +1505,115 @@ with tab_channel:
         channel_table = channel_summary[
             ["유통채널", "매출"]
         ].copy()
-
-        channel_table["매출"] = channel_table["매출"].map(format_won)
+        channel_table = channel_table.rename(
+            columns={"매출": "실매출"}
+        )
         channel_table["구성비"] = (
             channel_summary["매출"]
-            .div(channel_revenue_total)
+            .div(total_channel_sales)
             .mul(100)
             .map(lambda value: f"{value:.1f}%")
         )
+        channel_table["실매출"] = channel_table[
+            "실매출"
+        ].map(format_won)
 
         render_html_table(
             channel_table,
-            right_align_columns=["매출", "구성비"],
+            right_align_columns=["실매출", "구성비"],
             max_height=440,
         )
 
 
-# ==================================================
-# 휴일예약 매출 비중
-# ==================================================
+# =========================================================
+# 실매출 탭: 검색 + 숫자 기준 정렬
+# =========================================================
+with tab_real_sales:
+    st.markdown(
+        '<div class="section-heading">실매출 데이터</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <div class="info-note">
+            엑셀 실매출 시트의 본부, 영업실, 영업팀, 담당세일즈,
+            대리점코드, 대리점한글명, 실매출 데이터를 표시합니다.
+            검색어와 정렬 기준을 함께 사용할 수 있습니다.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # 새 실매출 시트의 컬럼 순서로 표시용 데이터를 생성합니다.
+    real_sales_display = pd.DataFrame(index=real_sales_df.index)
+
+    display_column_map = [
+        ("본부", "본부"),
+        ("담당실", "영업실"),
+        ("담당팀", "영업팀"),
+        ("담당세일즈", "담당세일즈"),
+        ("_대리점코드", "대리점코드"),
+        ("대리점명", "대리점한글명"),
+        ("매출", "실매출"),
+    ]
+
+    for source_column, display_column in display_column_map:
+        if source_column in real_sales_df.columns:
+            real_sales_display[display_column] = real_sales_df[
+                source_column
+            ]
+
+    # 검색은 표시되는 전체 컬럼에서 부분 일치로 수행합니다.
+    real_sales_search = st.text_input(
+        "실매출 데이터 검색",
+        placeholder="본부, 영업실, 영업팀, 담당자, 대리점코드 또는 대리점명 검색",
+        key="real_sales_search",
+    )
+
+    real_sales_filtered = real_sales_display.copy()
+
+    if real_sales_search.strip():
+        real_sales_filtered = filter_agency_search(
+            real_sales_filtered,
+            real_sales_search,
+            list(real_sales_filtered.columns),
+        )
+
+    # 매출 숫자 기준으로 정렬할 수 있도록 내부 정렬 컬럼을 유지합니다.
+    real_sales_filtered, real_sort_column, real_sort_order = sort_controls(
+        real_sales_filtered,
+        numeric_columns=["실매출"],
+        key_prefix="real_sales",
+        label="숫자 정렬",
+        default_column="실매출",
+    )
+
+    st.caption(
+        f"검색 결과 {len(real_sales_filtered):,}건 · "
+        f"정렬 기준: {real_sort_column or '없음'} · "
+        f"정렬 순서: {real_sort_order}"
+    )
+
+    if real_sales_filtered.empty:
+        st.info("검색 조건에 맞는 실매출 데이터가 없습니다.")
+    else:
+        real_sales_table = real_sales_filtered.copy()
+        real_sales_table["실매출"] = real_sales_table[
+            "실매출"
+        ].map(format_won)
+
+        render_html_table(
+            real_sales_table,
+            left_align_columns=["대리점한글명"],
+            right_align_columns=["실매출"],
+            max_height=620,
+        )
+
+
+# =========================================================
+# 휴일예약 매출 비중 탭: 검색 + 정렬 기준
+# =========================================================
 with tab_holiday:
     st.markdown(
         '<div class="section-heading">휴일예약 매출 비중</div>',
@@ -1359,58 +1623,56 @@ with tab_holiday:
     st.markdown(
         """
         <div class="info-note">
-            대리점별 실매출과 휴일예약 시트의 휴일 매출을 비교합니다.
+            대리점별 실매출과 휴일예약 시트의 매출을 비교합니다.
             휴일예약 매출 비중은 휴일예약 매출을 실매출로 나누어 계산합니다.
-            휴일예약 시트에 매출이 없는 대리점은 휴일예약 매출 0원으로 표시합니다.
+            휴일예약 시트에 매출이 없는 대리점은 휴일예약 매출을 0원으로 표시합니다.
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # 실매출 시트를 기준으로 대리점별 실매출과 담당 정보를 집계합니다.
-    comparison_aggregations = {
+    holiday_aggregations = {
         "실매출": ("매출", "sum"),
     }
 
     for column in [
-        "대리점명",
+        "본부",
         "담당실",
         "담당팀",
         "담당세일즈",
+        "대리점명",
     ]:
         if column in real_sales_df.columns:
-            comparison_aggregations[column] = (column, "first")
+            holiday_aggregations[column] = (column, "first")
 
     holiday_comparison = (
         real_sales_df
         .groupby("_대리점코드", as_index=False)
-        .agg(**comparison_aggregations)
+        .agg(**holiday_aggregations)
     )
 
-    # 휴일예약 시트의 휴일 매출을 대리점별로 집계합니다.
-    holiday_revenue_by_agency = (
+    holiday_by_agency = (
         holiday_sales_df
         .groupby("_대리점코드", as_index=False)
         .agg(휴일예약매출=("매출", "sum"))
     )
 
-    # 실매출 대리점 전체를 유지하면서 휴일예약 매출을 연결합니다.
     holiday_comparison = holiday_comparison.merge(
-        holiday_revenue_by_agency,
+        holiday_by_agency,
         on="_대리점코드",
         how="left",
     )
 
     holiday_comparison["휴일예약매출"] = (
-        holiday_comparison["휴일예약매출"]
-        .fillna(0)
+        holiday_comparison["휴일예약매출"].fillna(0)
     )
 
     for column in [
-        "대리점명",
+        "본부",
         "담당실",
         "담당팀",
         "담당세일즈",
+        "대리점명",
     ]:
         if column not in holiday_comparison.columns:
             holiday_comparison[column] = ""
@@ -1422,12 +1684,9 @@ with tab_holiday:
             .str.strip()
         )
 
-    holiday_comparison["대리점코드"] = (
+    holiday_comparison["대리점코드"] = clean_code(
         holiday_comparison["_대리점코드"]
-        .fillna("")
-        .astype(str)
-        .str.replace(r"\.0$", "", regex=True)
-    )
+    ).fillna("")
 
     holiday_comparison["_휴일예약 매출 비중"] = 0.0
     has_real_sales = holiday_comparison["실매출"].ne(0)
@@ -1436,8 +1695,16 @@ with tab_holiday:
         has_real_sales,
         "_휴일예약 매출 비중",
     ] = (
-        holiday_comparison.loc[has_real_sales, "휴일예약매출"]
-        .div(holiday_comparison.loc[has_real_sales, "실매출"])
+        holiday_comparison.loc[
+            has_real_sales,
+            "휴일예약매출",
+        ]
+        .div(
+            holiday_comparison.loc[
+                has_real_sales,
+                "실매출",
+            ]
+        )
         .mul(100)
     )
 
@@ -1447,11 +1714,11 @@ with tab_holiday:
         key="holiday_search",
     )
 
-    holiday_table = holiday_comparison.copy()
+    holiday_filtered = holiday_comparison.copy()
 
     if holiday_search.strip():
-        holiday_table = filter_agency_search(
-            holiday_table,
+        holiday_filtered = filter_agency_search(
+            holiday_filtered,
             holiday_search,
             [
                 "대리점코드",
@@ -1462,44 +1729,57 @@ with tab_holiday:
             ],
         )
 
-    holiday_table = holiday_table.sort_values(
-        "_휴일예약 매출 비중",
-        ascending=False,
-    ).copy()
-
-    holiday_table = holiday_table[
-        [
-            "대리점코드",
-            "대리점명",
-            "담당실",
-            "담당팀",
-            "담당세일즈",
-            "실매출",
-            "휴일예약매출",
-            "_휴일예약 매출 비중",
-        ]
-    ].rename(
+    holiday_filtered = holiday_filtered.rename(
         columns={
-            "휴일예약매출": "휴일예약 매출",
             "_휴일예약 매출 비중": "휴일예약 매출 비중",
+            "휴일예약매출": "휴일예약 매출",
         }
     )
 
-    holiday_table["실매출"] = holiday_table["실매출"].map(format_won)
-    holiday_table["휴일예약 매출"] = (
-        holiday_table["휴일예약 매출"].map(format_won)
-    )
-    holiday_table["휴일예약 매출 비중"] = (
-        holiday_table["휴일예약 매출 비중"]
-        .map(lambda value: f"{value:.1f}%")
+    holiday_filtered, holiday_sort_column, holiday_sort_order = sort_controls(
+        holiday_filtered,
+        numeric_columns=[
+            "실매출",
+            "휴일예약 매출",
+            "휴일예약 매출 비중",
+        ],
+        key_prefix="holiday",
+        label="정렬",
+        default_column="휴일예약 매출 비중",
     )
 
-    if holiday_search.strip():
-        st.caption(f"검색 결과 {len(holiday_table):,}건")
+    st.caption(
+        f"검색 결과 {len(holiday_filtered):,}건 · "
+        f"정렬 기준: {holiday_sort_column or '없음'} · "
+        f"정렬 순서: {holiday_sort_order}"
+    )
 
-    if holiday_table.empty:
+    if holiday_filtered.empty:
         st.info("검색 조건에 맞는 대리점이 없습니다.")
     else:
+        holiday_table = holiday_filtered[
+            [
+                "대리점코드",
+                "대리점명",
+                "담당실",
+                "담당팀",
+                "담당세일즈",
+                "실매출",
+                "휴일예약 매출",
+                "휴일예약 매출 비중",
+            ]
+        ].copy()
+
+        holiday_table["실매출"] = holiday_table[
+            "실매출"
+        ].map(format_won)
+        holiday_table["휴일예약 매출"] = holiday_table[
+            "휴일예약 매출"
+        ].map(format_won)
+        holiday_table["휴일예약 매출 비중"] = holiday_table[
+            "휴일예약 매출 비중"
+        ].map(lambda value: f"{value:.1f}%")
+
         render_html_table(
             holiday_table,
             left_align_columns=["대리점명"],
@@ -1509,15 +1789,16 @@ with tab_holiday:
                 "휴일예약 매출 비중",
             ],
             column_widths={
-                "대리점코드": "140px",
-                "대리점명": "320px",
-                "담당실": "130px",
-                "담당팀": "130px",
-                "담당세일즈": "150px",
-                "실매출": "180px",
-                "휴일예약 매출": "190px",
-                "휴일예약 매출 비중": "180px",
+                "대리점코드": "9%",
+                "대리점명": "17%",
+                "담당실": "10%",
+                "담당팀": "10%",
+                "담당세일즈": "11%",
+                "실매출": "15%",
+                "휴일예약 매출": "15%",
+                "휴일예약 매출 비중": "13%",
             },
-            min_table_width="1420px",
             max_height=560,
+            fit_width=True,
+            compact=True,
         )
