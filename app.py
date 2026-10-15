@@ -719,7 +719,7 @@ def sort_controls(
 
 
 def render_overview_table():
-    """프로모션 개요 표를 표시합니다."""
+    """프로모션 개요 표를 별도 HTML 프레임으로 표시합니다."""
     overview = [
         ("최초예약일", "2026년 10월 1일 ~ 2026년 11월 30일"),
         ("출발일", "2026년 10월 1일 ~ 2027년 2월 28일"),
@@ -745,11 +745,9 @@ def render_overview_table():
     for label, content in overview:
         if label == "지급":
             content_html = (
-                "<ol style='margin:0; padding-left:22px;'>"
+                "<ol>"
                 + "".join(
-                    "<li style='margin:4px 0;'>"
-                    + escape(item)
-                    + "</li>"
+                    f"<li>{escape(item)}</li>"
                     for item in content
                 )
                 + "</ol>"
@@ -759,22 +757,32 @@ def render_overview_table():
 
         rows.append(
             "<tr>"
-            f"<td class='overview-label'>{escape(label)}</td>"
-            f"<td class='overview-content'>{content_html}</td>"
+            f"<td class='label'>{escape(label)}</td>"
+            f"<td class='content'>{content_html}</td>"
             "</tr>"
         )
 
-    st.markdown(
-        f"""
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="utf-8">
         <style>
-            /* 표 아래에 붙는 여백을 줄입니다. */
-            div[data-testid="stElementContainer"]:has(.overview-table-wrap),
-            div[data-testid="stElementContainer"]:has(.multiplier-table-wrap) {{
-                margin-bottom: 0 !important;
-                padding-bottom: 0 !important;
+            * {{
+                box-sizing: border-box;
             }}
 
-            .overview-table-wrap {{
+            html, body {{
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                font-family: Pretendard, -apple-system,
+                             BlinkMacSystemFont, "Segoe UI", sans-serif;
+                color: {DARK};
+                background: transparent;
+            }}
+
+            .wrap {{
                 width: 100%;
                 margin: 0;
                 padding: 0;
@@ -784,64 +792,126 @@ def render_overview_table():
                 background: #FFFFFF;
             }}
 
-            .overview-table-wrap table {{
+            table {{
                 width: 100%;
                 margin: 0;
                 border-collapse: collapse;
-                color: {DARK};
-                background: #FFFFFF;
                 font-size: 14px;
             }}
 
-            .overview-table-wrap th {{
+            th {{
                 padding: 10px 14px;
-                text-align: center !important;
+                text-align: center;
                 background: {LIGHT_PURPLE};
-                color: {DARK};
                 font-weight: 700;
             }}
 
-            .overview-table-wrap td {{
+            td {{
                 padding: 8px 14px;
                 border-top: 1px solid {BORDER};
                 vertical-align: middle;
                 line-height: 1.5;
             }}
 
-            .overview-table-wrap .overview-label {{
+            td.label {{
                 width: 120px;
-                text-align: center !important;
+                text-align: center;
                 white-space: nowrap;
             }}
 
-            .overview-table-wrap .overview-content {{
-                text-align: left !important;
+            td.content {{
+                text-align: left;
+            }}
+
+            ol {{
+                margin: 0;
+                padding-left: 22px;
+            }}
+
+            li {{
+                margin: 4px 0;
             }}
         </style>
-
-        <div class="overview-table-wrap">
+    </head>
+    <body>
+        <div class="wrap">
             <table>
                 <thead>
-                    <tr>
-                        <th>구분</th>
-                        <th>내용</th>
-                    </tr>
+                    <tr><th>구분</th><th>내용</th></tr>
                 </thead>
-                <tbody>
-                    {''.join(rows)}
-                </tbody>
+                <tbody>{''.join(rows)}</tbody>
             </table>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    </body>
+    </html>
+    """
+
+    components.html(html, height=300, scrolling=False)
 
 
 def render_multiplier_table():
-    """상품 속성별 인정 배수 표를 표시합니다."""
-    st.markdown(
-        f"""
-        <div class="multiplier-table-wrap">
+    """상품 속성별 인정 배수 표를 별도 HTML 프레임으로 표시합니다."""
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="utf-8">
+        <style>
+            * {{
+                box-sizing: border-box;
+            }}
+
+            html, body {{
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                font-family: Pretendard, -apple-system,
+                             BlinkMacSystemFont, "Segoe UI", sans-serif;
+                color: {DARK};
+                background: transparent;
+            }}
+
+            .wrap {{
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                border: 1px solid {BORDER};
+                border-radius: 10px;
+                background: #FFFFFF;
+            }}
+
+            table {{
+                width: 100%;
+                margin: 0;
+                border-collapse: collapse;
+                table-layout: fixed;
+                font-size: 14px;
+            }}
+
+            th, td {{
+                padding: 10px 12px;
+                text-align: center !important;
+                vertical-align: middle !important;
+                border-right: 1px solid {BORDER};
+            }}
+
+            th {{
+                background: {LIGHT_PURPLE};
+                font-weight: 700;
+            }}
+
+            td {{
+                border-top: 1px solid {BORDER};
+            }}
+
+            th:last-child, td:last-child {{
+                border-right: 0;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="wrap">
             <table>
                 <thead>
                     <tr>
@@ -875,54 +945,12 @@ def render_multiplier_table():
                 </tbody>
             </table>
         </div>
+    </body>
+    </html>
+    """
 
-        <style>
-            .multiplier-table-wrap {{
-                width: 100%;
-                margin: 0;
-                padding: 0;
-                overflow: hidden;
-                border: 1px solid {BORDER};
-                border-radius: 10px;
-                background: #FFFFFF;
-            }}
+    components.html(html, height=215, scrolling=False)
 
-            .multiplier-table-wrap table {{
-                width: 100%;
-                margin: 0;
-                border-collapse: collapse;
-                color: {DARK};
-                background: #FFFFFF;
-                font-size: 14px;
-                table-layout: fixed;
-            }}
-
-            .multiplier-table-wrap th,
-            .multiplier-table-wrap td {{
-                padding: 10px 12px;
-                text-align: center !important;
-                vertical-align: middle !important;
-                border-right: 1px solid {BORDER};
-            }}
-
-            .multiplier-table-wrap th {{
-                background: {LIGHT_PURPLE};
-                color: {DARK};
-                font-weight: 700;
-            }}
-
-            .multiplier-table-wrap td {{
-                border-top: 1px solid {BORDER};
-            }}
-
-            .multiplier-table-wrap th:last-child,
-            .multiplier-table-wrap td:last-child {{
-                border-right: 0;
-            }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 
