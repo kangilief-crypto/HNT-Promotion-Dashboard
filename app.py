@@ -768,10 +768,6 @@ def render_overview_table():
     <head>
         <meta charset="utf-8">
         <style>
-        tbody tr:last-child td {
-    border-bottom: 1px solid {BORDER};
-}
-
             * {{
                 box-sizing: border-box;
             }}
@@ -850,7 +846,7 @@ def render_overview_table():
     </html>
     """
 
-    components.html(html, height=330, scrolling=False)
+    components.html(html, height=300, scrolling=False)
 
 
 def render_multiplier_table():
