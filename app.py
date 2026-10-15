@@ -1,11 +1,19 @@
 from pathlib import Path
 import numbers
 from html import escape
+import hmac
 
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 import streamlit.components.v1 as components
+
+
+# 페이지 설정은 다른 Streamlit 명령보다 먼저, 한 번만 호출합니다.
+st.set_page_config(
+    page_title="HNT Promotion Dashboard",
+    layout="wide",
+)
 
 
 # =========================================================
@@ -29,13 +37,16 @@ HOLIDAY_SHEET = "휴일예약"
 
 
 # =========================================================
-# 페이지 설정 및 스타일
+# 인증 설정
 # =========================================================
-st.set_page_config(
-    page_title="HNT Promotion Dashboard",
-    layout="wide",
-)
+# 기본 비밀번호 (필요시 원하는 비밀번호로 변경하세요. .streamlit/secrets.toml 설정 시 해당 비밀번호가 우선 적용됩니다)
+DEFAULT_PASSWORD = "hana2026"
+AUTH_KEY = "hnt_dashboard_authenticated"
 
+
+# =========================================================
+# 스타일 (CSS)
+# =========================================================
 st.markdown(
     f"""
     <style>
@@ -184,10 +195,102 @@ st.markdown(
         .stTabs [data-baseweb="tab-highlight"] {{
             background-color: {PURPLE};
         }}
+
+        /* 로그인 카드 스타일 */
+        .login-card {{
+            background: #FFFFFF;
+            border: 1px solid {BORDER};
+            border-top: 4px solid {PURPLE};
+            border-radius: 14px;
+            padding: 32px 28px 24px 28px;
+            box-shadow: 0 8px 24px rgba(94, 43, 184, 0.08);
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }}
+
+        .login-title {{
+            color: {DARK};
+            font-size: 1.5rem;
+            font-weight: 750;
+            letter-spacing: -0.03em;
+            margin: 0;
+        }}
+
+        .login-subtitle {{
+            color: {MUTED};
+            font-size: 0.9rem;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            line-height: 1.5;
+        }}
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+
+def check_password(entered_password: str) -> bool:
+    """비밀번호 검증 (secrets.toml 설정 시 우선 적용, 없을 시 DEFAULT_PASSWORD 사용)"""
+    saved_password = None
+    try:
+        if "auth" in st.secrets and "password" in st.secrets["auth"]:
+            saved_password = str(st.secrets["auth"]["password"])
+        elif "password" in st.secrets:
+            saved_password = str(st.secrets["password"])
+    except Exception:
+        saved_password = None
+
+    if not saved_password:
+        saved_password = DEFAULT_PASSWORD
+
+    return hmac.compare_digest(entered_password.strip(), saved_password.strip())
+
+
+def require_password():
+    """비밀번호 인증 화면 처리"""
+    if st.session_state.get(AUTH_KEY, False):
+        with st.sidebar:
+            st.caption("🔒 로그인 상태")
+            if st.button("로그아웃", use_container_width=True):
+                st.session_state[AUTH_KEY] = False
+                st.rerun()
+        return
+
+    # 미인증 시 중앙 로그인 폼 노출
+    _, center_col, _ = st.columns([1, 1.4, 1])
+
+    with center_col:
+        st.markdown(
+            f"""
+            <div class="login-card">
+                <div class="login-title"><span style="color:{PURPLE};">HNT</span> Promotion Dashboard</div>
+                <div class="brand-line" style="margin-top: 8px; margin-bottom: 14px;"></div>
+                <div class="login-subtitle">대시보드를 확인하려면 비밀번호를 입력해 주세요.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        with st.form("password_login_form"):
+            entered_password = st.text_input(
+                "비밀번호",
+                type="password",
+                placeholder="비밀번호를 입력하세요",
+            )
+            submitted = st.form_submit_button("로그인", use_container_width=True, type="primary")
+
+        if submitted:
+            if entered_password and check_password(entered_password):
+                st.session_state[AUTH_KEY] = True
+                st.success("인증되었습니다.")
+                st.rerun()
+            else:
+                st.error("비밀번호가 올바르지 않습니다.")
+
+    st.stop()
+
+
+require_password()
 
 
 # =========================================================
