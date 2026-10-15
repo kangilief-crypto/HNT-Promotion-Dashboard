@@ -45,175 +45,335 @@ AUTH_KEY = "hnt_dashboard_authenticated"
 
 
 # =========================================================
-# 스타일 (CSS)
+# 스타일 (CSS) - HanaTour Brand Design System
 # =========================================================
 st.markdown(
     f"""
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
-        .stApp {{
-            background: #FFFFFF;
+        /* 폰트 및 기본 테마 설정 */
+        html, body, [class*="css"], .stApp {{
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+            background: #FAFAFC;
             color: {DARK};
         }}
 
         .block-container {{
             max-width: 1440px;
-            padding-top: 2.2rem;
-            padding-bottom: 3rem;
+            padding-top: 1.8rem;
+            padding-bottom: 3.5rem;
         }}
 
+        /* 대시보드 헤더 배너 */
         .dashboard-header {{
-            border-bottom: 1px solid {BORDER};
-            padding-bottom: 18px;
-            margin-bottom: 22px;
+            background: linear-gradient(135deg, #FFFFFF 0%, {LIGHT_PURPLE} 100%);
+            border: 1px solid {BORDER};
+            border-radius: 16px;
+            padding: 26px 32px 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(94, 43, 184, 0.04);
+            position: relative;
+            overflow: hidden;
+        }}
+
+        .dashboard-header::after {{
+            content: "";
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 240px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(8, 209, 217, 0.15) 0%, rgba(94, 43, 184, 0.05) 50%, transparent 75%);
+            pointer-events: none;
+        }}
+
+        .header-top-tag {{
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: #FFFFFF;
+            border: 1px solid {BORDER};
+            color: {PURPLE};
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 6px rgba(94, 43, 184, 0.04);
+        }}
+
+        .live-dot {{
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: {MINT};
+            box-shadow: 0 0 8px {MINT};
         }}
 
         .dashboard-title {{
             color: {DARK};
             font-size: 2.15rem;
-            font-weight: 750;
+            font-weight: 800;
             letter-spacing: -0.04em;
             line-height: 1.2;
             margin: 0;
         }}
 
-        .dashboard-title .purple {{
-            color: {PURPLE};
+        .dashboard-title .brand-title {{
+            background: linear-gradient(135deg, {PURPLE} 0%, #834BE8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+
+        .dashboard-subtitle {{
+            color: {MUTED};
+            font-size: 0.92rem;
+            margin-top: 6px;
+            font-weight: 500;
+            line-height: 1.5;
         }}
 
         .brand-line {{
-            width: 66px;
+            width: 60px;
             height: 4px;
             border-radius: 4px;
             background: linear-gradient(90deg, {PURPLE}, {MINT});
-            margin-top: 14px;
+            margin-top: 10px;
         }}
 
+        /* 섹션 및 서브섹션 타이틀 */
         .section-heading {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
             color: {DARK};
-            font-size: 1.15rem;
-            font-weight: 700;
-            border-left: 4px solid {PURPLE};
-            padding-left: 10px;
-            margin: 18px 0 14px 0;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin: 28px 0 16px 0;
+        }}
+
+        .section-heading::before {{
+            content: "";
+            display: inline-block;
+            width: 5px;
+            height: 20px;
+            border-radius: 3px;
+            background: linear-gradient(180deg, {PURPLE} 0%, {MINT} 100%);
         }}
 
         .subsection-heading {{
             color: {DARK};
-            font-size: 1rem;
-            font-weight: 700;
-            margin: 18px 0 10px 0;
+            font-size: 1.05rem;
+            font-weight: 750;
+            letter-spacing: -0.02em;
+            margin: 22px 0 12px 0;
+            padding-left: 2px;
         }}
 
+        /* KPI 카드 */
         .kpi-card {{
             background: #FFFFFF;
             border: 1px solid {BORDER};
-            border-top: 3px solid {PURPLE};
-            border-radius: 12px;
-            padding: 18px 20px;
-            min-height: 112px;
+            border-radius: 14px;
+            padding: 22px 20px 20px 20px;
+            min-height: 118px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(94, 43, 184, 0.03);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }}
 
-        .kpi-card.mint {{
-            border-top-color: {MINT};
+        .kpi-card:hover {{
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(94, 43, 184, 0.08);
+            border-color: #D3C9EF;
+        }}
+
+        .kpi-card::before {{
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, {PURPLE}, #7F4BE8);
+        }}
+
+        .kpi-card.mint::before {{
+            background: linear-gradient(90deg, {MINT}, #33E5EC);
         }}
 
         .kpi-label {{
             color: {MUTED};
-            font-size: 0.88rem;
+            font-size: 0.86rem;
             font-weight: 600;
-            margin-bottom: 12px;
+            letter-spacing: -0.01em;
+            margin-bottom: 10px;
         }}
 
         .kpi-value {{
             color: {DARK};
-            font-size: 1.65rem;
-            font-weight: 750;
-            letter-spacing: -0.035em;
+            font-size: 1.72rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
             line-height: 1.15;
+            font-variant-numeric: tabular-nums;
         }}
 
         .kpi-note {{
+            display: inline-block;
             color: {MUTED};
-            font-size: 0.78rem;
-            margin-top: 7px;
-            line-height: 1.5;
-        }}
-
-        .info-note {{
-            color: {MUTED};
-            font-size: 0.88rem;
-            background: {LIGHT_PURPLE};
-            border-left: 3px solid {MINT};
+            font-size: 0.76rem;
+            font-weight: 500;
+            margin-top: 10px;
+            padding: 3px 9px;
+            background: #F4F3F8;
             border-radius: 6px;
-            padding: 10px 13px;
-            margin: 10px 0 14px 0;
-            line-height: 1.65;
+            line-height: 1.4;
         }}
 
+        /* 안내 박스 (Info Note) */
+        .info-note {{
+            color: #49455B;
+            font-size: 0.88rem;
+            background: linear-gradient(135deg, #F8F5FF 0%, #F3FCFC 100%);
+            border: 1px solid #E3DCF5;
+            border-left: 4px solid {PURPLE};
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin: 12px 0 16px 0;
+            line-height: 1.65;
+            box-shadow: 0 1px 4px rgba(94, 43, 184, 0.02);
+        }}
+
+        /* 탭 네비게이션 고도화 (Modern Segmented Navigation) */
         .stTabs [data-baseweb="tab-list"] {{
             gap: 8px;
-            border-bottom: 1px solid {BORDER};
-            padding-bottom: 5px;
+            background: #F2EFF8;
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid {BORDER};
+            margin-bottom: 12px;
         }}
 
         .stTabs [data-baseweb="tab"] {{
-            height: 46px;
+            height: 42px;
             color: {MUTED};
             font-weight: 700;
+            font-size: 0.92rem;
             padding: 0 18px;
-            border: 1px solid transparent;
-            border-radius: 8px 8px 0 0;
-            transition: filter 0.15s ease;
-        }}
-
-        /* 홀수 번째 탭: 보라색 */
-        .stTabs [data-baseweb="tab"]:nth-child(odd) {{
-            color: #FFFFFF;
-            background-color: {PURPLE};
-        }}
-
-        /* 짝수 번째 탭: 민트색 */
-        .stTabs [data-baseweb="tab"]:nth-child(even) {{
-            color: {DARK};
-            background-color: {MINT};
-        }}
-
-        /* 선택된 탭은 아래쪽 테두리를 반대 색으로 강조합니다. */
-        .stTabs [data-baseweb="tab"]:nth-child(odd)[aria-selected="true"] {{
-            border-bottom: 4px solid {MINT};
-        }}
-
-        .stTabs [data-baseweb="tab"]:nth-child(even)[aria-selected="true"] {{
-            border-bottom: 4px solid {PURPLE};
+            border: none !important;
+            border-radius: 8px !important;
+            background-color: transparent !important;
+            transition: all 0.2s ease;
         }}
 
         .stTabs [data-baseweb="tab"]:hover {{
-            filter: brightness(0.92);
+            color: {PURPLE} !important;
+            background-color: rgba(94, 43, 184, 0.08) !important;
         }}
 
-        .stTabs [data-baseweb="tab-highlight"] {{
-            background-color: {PURPLE};
+        .stTabs [data-baseweb="tab"][aria-selected="true"] {{
+            color: #FFFFFF !important;
+            background: linear-gradient(135deg, {PURPLE} 0%, #763FE6 100%) !important;
+            box-shadow: 0 4px 12px rgba(94, 43, 184, 0.25) !important;
+        }}
+
+        .stTabs [data-baseweb="tab-highlight"],
+        .stTabs [data-baseweb="tab-border"] {{
+            display: none !important;
+        }}
+
+        /* 폼 위젯 스타일링 (Input, Select, Button) */
+        div[data-testid="stTextInput"] input {{
+            border: 1px solid {BORDER};
+            border-radius: 10px;
+            background: #FFFFFF;
+            color: {DARK};
+            font-size: 0.92rem;
+            padding: 9px 14px;
+            transition: all 0.2s ease;
+        }}
+
+        div[data-testid="stTextInput"] input:focus {{
+            border-color: {PURPLE};
+            box-shadow: 0 0 0 3px rgba(94, 43, 184, 0.12);
+        }}
+
+        div[data-testid="stSelectbox"] > div > div {{
+            border: 1px solid {BORDER};
+            border-radius: 10px;
+            background: #FFFFFF;
+            transition: all 0.2s ease;
+        }}
+
+        div[data-testid="stSelectbox"] > div > div:focus-within {{
+            border-color: {PURPLE};
+            box-shadow: 0 0 0 3px rgba(94, 43, 184, 0.12);
+        }}
+
+        button[kind="primary"], .stButton > button {{
+            border-radius: 10px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }}
+
+        button[kind="primary"] {{
+            background: linear-gradient(135deg, {PURPLE} 0%, #7539DC 100%) !important;
+            border: none !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 4px 14px rgba(94, 43, 184, 0.22);
+        }}
+
+        button[kind="primary"]:hover {{
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(94, 43, 184, 0.32);
+        }}
+
+        hr {{
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, {BORDER}, transparent);
+            margin: 28px 0;
         }}
 
         /* 로그인 카드 스타일 */
         .login-card {{
             background: #FFFFFF;
             border: 1px solid {BORDER};
-            border-top: 4px solid {PURPLE};
-            border-radius: 14px;
-            padding: 32px 28px 24px 28px;
-            box-shadow: 0 8px 24px rgba(94, 43, 184, 0.08);
-            margin-top: 40px;
+            border-radius: 16px;
+            padding: 34px 30px 26px 30px;
+            box-shadow: 0 12px 36px rgba(94, 43, 184, 0.08);
+            margin-top: 45px;
             margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }}
+
+        .login-card::before {{
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, {PURPLE}, {MINT});
         }}
 
         .login-title {{
             color: {DARK};
-            font-size: 1.5rem;
-            font-weight: 750;
+            font-size: 1.55rem;
+            font-weight: 800;
             letter-spacing: -0.03em;
             margin: 0;
+        }}
+
+        .login-title .brand-title {{
+            background: linear-gradient(135deg, {PURPLE} 0%, #834BE8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }}
 
         .login-subtitle {{
@@ -250,7 +410,15 @@ def require_password():
     """비밀번호 인증 화면 처리"""
     if st.session_state.get(AUTH_KEY, False):
         with st.sidebar:
-            st.caption("🔒 로그인 상태")
+            st.markdown(
+                f"""
+                <div style="padding: 10px 14px; background: {LIGHT_PURPLE}; border-radius: 10px; border: 1px solid #E3DCF5; margin-bottom: 12px;">
+                    <div style="color: {PURPLE}; font-weight: 750; font-size: 0.88rem;">🔒 로그인 인증 완료</div>
+                    <div style="color: {MUTED}; font-size: 0.78rem; margin-top: 2px;">정상 접근 상태입니다.</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
             if st.button("로그아웃", use_container_width=True):
                 st.session_state[AUTH_KEY] = False
                 st.rerun()
@@ -263,7 +431,10 @@ def require_password():
         st.markdown(
             f"""
             <div class="login-card">
-                <div class="login-title"><span style="color:{PURPLE};">HNT</span> Promotion Dashboard</div>
+                <div class="header-top-tag" style="margin-bottom: 14px;">
+                    <span class="live-dot"></span> SECURE ACCESS
+                </div>
+                <div class="login-title"><span class="brand-title">HNT</span> Promotion Dashboard</div>
                 <div class="brand-line" style="margin-top: 8px; margin-bottom: 14px;"></div>
                 <div class="login-subtitle">대시보드를 확인하려면 비밀번호를 입력해 주세요.</div>
             </div>
@@ -277,12 +448,12 @@ def require_password():
                 type="password",
                 placeholder="비밀번호를 입력하세요",
             )
-            submitted = st.form_submit_button("로그인", use_container_width=True, type="primary")
+            submitted = st.form_submit_button("대시보드 접속", use_container_width=True, type="primary")
 
         if submitted:
             if entered_password and check_password(entered_password):
                 st.session_state[AUTH_KEY] = True
-                st.success("인증되었습니다.")
+                st.success("인증되었습니다. 대시보드로 이동합니다...")
                 st.rerun()
             else:
                 st.error("비밀번호가 올바르지 않습니다.")
@@ -643,6 +814,7 @@ def render_html_table(
     <html lang="ko">
     <head>
         <meta charset="utf-8">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
         <style>
             * {{
                 box-sizing: border-box;
@@ -666,8 +838,9 @@ def render_html_table(
                 overflow-y: auto;
                 scrollbar-gutter: stable;
                 border: 1px solid {BORDER};
-                border-radius: 11px;
+                border-radius: 12px;
                 background: #FFFFFF;
+                box-shadow: 0 2px 10px rgba(94, 43, 184, 0.03);
             }}
 
             table {{
@@ -681,26 +854,32 @@ def render_html_table(
                 top: 0;
                 z-index: 1;
                 padding: {header_padding};
-                background: #F8F7FA;
-                color: {MUTED};
-                font-weight: 600;
+                background: #F8F7FC;
+                color: {PURPLE};
+                font-weight: 750;
                 text-align: center;
-                border-bottom: 1px solid {BORDER};
-                border-right: 1px solid {BORDER};
+                border-bottom: 2px solid {BORDER};
+                border-right: 1px solid #ECE8F5;
                 white-space: normal;
                 line-height: 1.35;
                 overflow-wrap: anywhere;
                 word-break: keep-all;
+                letter-spacing: -0.01em;
             }}
 
             tbody td {{
                 padding: {cell_padding};
                 background: #FFFFFF;
-                border-bottom: 1px solid #E8E8EB;
-                border-right: 1px solid #E8E8EB;
+                border-bottom: 1px solid #F0EDF5;
+                border-right: 1px solid #F0EDF5;
                 vertical-align: middle;
-                line-height: 1.4;
+                line-height: 1.45;
                 {cell_wrap_css}
+                transition: background-color 0.12s ease;
+            }}
+
+            tbody tr:hover td {{
+                background-color: #FAF8FE !important;
             }}
 
             tbody tr:last-child td {{
@@ -722,22 +901,26 @@ def render_html_table(
 
             tbody td.align-right {{
                 text-align: right;
+                font-variant-numeric: tabular-nums;
             }}
 
             .table-scroll::-webkit-scrollbar {{
-                width: 10px;
-                height: 10px;
+                width: 7px;
+                height: 7px;
             }}
 
             .table-scroll::-webkit-scrollbar-track {{
-                background: #F1EFF5;
+                background: #F8F7FA;
                 border-radius: 6px;
             }}
 
             .table-scroll::-webkit-scrollbar-thumb {{
-                background: #AAA5B3;
-                border: 2px solid #F1EFF5;
+                background: #CBC5D5;
                 border-radius: 6px;
+            }}
+
+            .table-scroll::-webkit-scrollbar-thumb:hover {{
+                background: {PURPLE};
             }}
         </style>
     </head>
@@ -870,6 +1053,7 @@ def render_overview_table():
     <html lang="ko">
     <head>
         <meta charset="utf-8">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
         <style>
             * {{
                 box-sizing: border-box;
@@ -891,52 +1075,64 @@ def render_overview_table():
                 padding: 0;
                 overflow: hidden;
                 border: 1px solid {BORDER};
-                border-radius: 10px;
+                border-radius: 12px;
                 background: #FFFFFF;
+                box-shadow: 0 2px 10px rgba(94, 43, 184, 0.03);
             }}
 
             table {{
                 width: 100%;
                 margin: 0;
                 border-collapse: collapse;
-                font-size: 14px;
+                font-size: 13.5px;
             }}
 
             th {{
-                padding: 10px 14px;
+                padding: 12px 14px;
                 text-align: center;
                 background: {LIGHT_PURPLE};
-                font-weight: 700;
+                color: {PURPLE};
+                font-weight: 750;
+                border-bottom: 2px solid {BORDER};
             }}
 
             td {{
-                padding: 8px 14px;
-                border-top: 1px solid {BORDER};
+                padding: 10px 16px;
+                border-top: 1px solid #F0EDF5;
                 vertical-align: middle;
-                line-height: 1.5;
+                line-height: 1.55;
+            }}
+
+            tbody tr:hover td {{
+                background-color: #FAF8FE;
             }}
 
             tbody tr:last-child td {{
-                border-bottom: 1px solid {BORDER};
+                border-bottom: 0;
             }}
 
             td.label {{
-                width: 120px;
+                width: 130px;
                 text-align: center;
                 white-space: nowrap;
+                font-weight: 700;
+                color: {PURPLE};
+                background: #FAF9FE;
+                border-right: 1px solid #F0EDF5;
             }}
 
             td.content {{
                 text-align: left;
+                color: {DARK};
             }}
 
             ol {{
                 margin: 0;
-                padding-left: 22px;
+                padding-left: 20px;
             }}
 
             li {{
-                margin: 4px 0;
+                margin: 5px 0;
             }}
         </style>
     </head>
@@ -964,6 +1160,7 @@ def render_multiplier_table():
     <html lang="ko">
     <head>
         <meta charset="utf-8">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
         <style>
             * {{
                 box-sizing: border-box;
@@ -985,8 +1182,9 @@ def render_multiplier_table():
                 padding: 0;
                 overflow: hidden;
                 border: 1px solid {BORDER};
-                border-radius: 10px;
+                border-radius: 12px;
                 background: #FFFFFF;
+                box-shadow: 0 2px 10px rgba(94, 43, 184, 0.03);
             }}
 
             table {{
@@ -995,29 +1193,54 @@ def render_multiplier_table():
                 border-collapse: separate;
                 border-spacing: 0;
                 table-layout: fixed;
-                font-size: 14px;
+                font-size: 13.5px;
             }}
 
             th, td {{
-                padding: 10px 12px;
+                padding: 11px 12px;
                 text-align: center !important;
                 vertical-align: middle !important;
-                border-right: 1px solid {BORDER};
+                border-right: 1px solid #F0EDF5;
             }}
 
             th {{
                 background: {LIGHT_PURPLE};
-                font-weight: 700;
+                color: {PURPLE};
+                font-weight: 750;
+                border-bottom: 2px solid {BORDER};
             }}
 
             td {{
-                border-top: 1px solid {BORDER};
+                border-top: 1px solid #F0EDF5;
             }}
 
-            /* 마지막 열의 오른쪽 선만 제거합니다. */
+            tbody tr:hover td {{
+                background-color: #FAF8FE;
+            }}
+
             th:last-child,
             td.last-column {{
                 border-right: 0;
+            }}
+
+            .badge-purple {{
+                display: inline-block;
+                padding: 3px 10px;
+                background: {LIGHT_PURPLE};
+                color: {PURPLE};
+                font-weight: 750;
+                border-radius: 6px;
+                border: 1px solid #E4DCF5;
+            }}
+
+            .badge-mint {{
+                display: inline-block;
+                padding: 3px 10px;
+                background: #E6FAFB;
+                color: #00878C;
+                font-weight: 750;
+                border-radius: 6px;
+                border: 1px solid #B8F2F5;
             }}
         </style>
     </head>
@@ -1034,24 +1257,24 @@ def render_multiplier_table():
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Z</td>
+                        <td style="font-weight:700;">Z</td>
                         <td>제우스</td>
-                        <td rowspan="2">2배</td>
-                        <td rowspan="4" class="last-column">1.5배</td>
+                        <td rowspan="2"><span class="badge-purple">2배</span></td>
+                        <td rowspan="4" class="last-column"><span class="badge-mint">1.5배</span></td>
                     </tr>
                     <tr>
-                        <td>U</td>
+                        <td style="font-weight:700;">U</td>
                         <td>우리끼리</td>
                     </tr>
                     <tr>
-                        <td>P</td>
+                        <td style="font-weight:700;">P</td>
                         <td>스탠다드, 프리미엄</td>
-                        <td>1.5배</td>
+                        <td><span class="badge-mint">1.5배</span></td>
                     </tr>
                     <tr>
-                        <td>ALL (Q 제외)</td>
+                        <td style="font-weight:700;">ALL (Q 제외)</td>
                         <td>-</td>
-                        <td>1배</td>
+                        <td style="font-weight:600;">1배</td>
                     </tr>
                 </tbody>
             </table>
@@ -1060,7 +1283,7 @@ def render_multiplier_table():
     </html>
     """
 
-    components.html(html, height=215, scrolling=False)
+    components.html(html, height=220, scrolling=False)
 
 
 # =========================================================
@@ -1069,21 +1292,26 @@ def render_multiplier_table():
 st.markdown(
     f"""
     <div class="dashboard-header">
+        <div class="header-top-tag">
+            <span class="live-dot"></span> 2026 유통점 영업 활성화 프로모션
+        </div>
         <h1 class="dashboard-title">
-            HNT <span class="purple">Promotion Dashboard</span>
+            <span class="brand-title">HNT</span> Promotion Dashboard
         </h1>
-        <div class="brand-line"></div>
+        <div class="dashboard-subtitle">
+            대리점별 실매출·보정매출 현황 및 프로모션 달성도 모니터링
+        </div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 st.markdown(
-    '<div class="section-heading">2026 유통점 영업 활성화 프로모션</div>',
+    '<div class="section-heading">프로모션 개요 및 가이드</div>',
     unsafe_allow_html=True,
 )
 st.markdown(
-    '<div class="subsection-heading">프로모션 개요</div>',
+    '<div class="subsection-heading">프로모션 상세 개요</div>',
     unsafe_allow_html=True,
 )
 render_overview_table()
@@ -1148,6 +1376,7 @@ vi_table_html = f"""
 <html lang="ko">
 <head>
     <meta charset="utf-8">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
         * {{
             box-sizing: border-box;
@@ -1165,31 +1394,38 @@ vi_table_html = f"""
         .vi-table-wrap {{
             width: 100%;
             border: 1px solid {BORDER};
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
             background: #FFFFFF;
+            box-shadow: 0 2px 10px rgba(94, 43, 184, 0.03);
         }}
 
         table {{
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
+            font-size: 13.5px;
         }}
 
         th {{
-            padding: 10px 12px;
+            padding: 11px 12px;
             text-align: center;
             background: {LIGHT_PURPLE};
-            color: {DARK};
-            font-weight: 700;
-            border-right: 1px solid {BORDER};
+            color: {PURPLE};
+            font-weight: 750;
+            border-right: 1px solid #ECE8F5;
+            border-bottom: 2px solid {BORDER};
         }}
 
         td {{
             padding: 10px 12px;
-            border-top: 1px solid {BORDER};
-            border-right: 1px solid {BORDER};
+            border-top: 1px solid #F0EDF5;
+            border-right: 1px solid #F0EDF5;
             line-height: 1.5;
+            font-variant-numeric: tabular-nums;
+        }}
+
+        tbody tr:hover td {{
+            background-color: #FAF8FE;
         }}
 
         th:last-child,
@@ -1659,15 +1895,16 @@ with tab_office:
 
         office_chart.update_layout(
             showlegend=False,
-            xaxis_title="담당실",
-            yaxis_title="실매출",
+            xaxis_title="",
+            yaxis_title="",
             yaxis_tickformat=",.0f",
-            plot_bgcolor="#FFFFFF",
-            paper_bgcolor="#FFFFFF",
-            font=dict(color=DARK),
-            margin=dict(l=20, r=20, t=25, b=20),
-            xaxis=dict(showgrid=False, linecolor=BORDER),
-            yaxis=dict(gridcolor="#F0EDF5", zeroline=False),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(color=DARK, family="Pretendard, -apple-system, sans-serif"),
+            margin=dict(l=20, r=20, t=28, b=20),
+            xaxis=dict(showgrid=False, linecolor=BORDER, tickfont=dict(size=13, color=DARK)),
+            yaxis=dict(gridcolor="#EFEAF7", zeroline=False, tickfont=dict(size=12, color=MUTED)),
+            bargap=0.36,
         )
 
         st.plotly_chart(
@@ -1873,10 +2110,11 @@ with tab_channel:
         )
 
         channel_chart.update_layout(
-            plot_bgcolor="#FFFFFF",
-            paper_bgcolor="#FFFFFF",
-            font=dict(color=DARK),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(color=DARK, family="Pretendard, -apple-system, sans-serif"),
             legend_title_text="유통채널",
+            legend=dict(font=dict(size=12, color=DARK)),
             margin=dict(l=20, r=20, t=20, b=20),
         )
 
