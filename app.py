@@ -1623,6 +1623,25 @@ sales_ranking = (
     .reset_index(drop=True)
 )
 
+# 실매출 시트의 예약인원을 대리점코드별로 합산해 순위 데이터에 연결합니다.
+if "예약인원" in real_sales_df.columns:
+    reservation_by_agency = (
+        real_sales_df
+        .groupby("_대리점코드", as_index=False)
+        .agg(예약인원=("예약인원", "sum"))
+    )
+    sales_ranking = sales_ranking.merge(
+        reservation_by_agency,
+        on="_대리점코드",
+        how="left",
+    )
+    sales_ranking["예약인원"] = (
+        numeric_series(sales_ranking["예약인원"])
+        .fillna(0)
+    )
+else:
+    sales_ranking["예약인원"] = 0
+
 sales_ranking.insert(
     0,
     "순위",
@@ -1664,13 +1683,13 @@ if "담당세일즈" in sales_ranking.columns:
 else:
     total_staff = 0
 
-# 총매출은 실매출 시트 기준으로 계산합니다.
+# 총매출과 총 예약인원은 실매출 시트 기준으로 계산합니다.
 total_real_sales = real_sales_df["매출"].sum()
-
-# 평균 실매출은 기존 총 대리점 수를 분모로 계산합니다.
-average_real_sales = (
-    total_real_sales / total_agencies
-    if total_agencies
+total_reservations = (
+    numeric_series(real_sales_df["예약인원"])
+    .fillna(0)
+    .sum()
+    if "예약인원" in real_sales_df.columns
     else 0
 )
 
@@ -1705,8 +1724,9 @@ with kpi3:
 
 with kpi4:
     render_kpi(
-        "대리점당 평균 실매출",
-        format_won(average_real_sales),
+        "예약인원",
+        format_count(total_reservations),
+        "실매출 시트 예약인원 합계",
         accent="mint",
     )
 
@@ -1766,6 +1786,7 @@ with tab_ranking:
             "담당팀",
             "담당세일즈",
             "보정매출",
+            "예약인원",
         ]
     ].copy()
 
@@ -1784,7 +1805,7 @@ with tab_ranking:
 
     ranking_table, ranking_sort_column, ranking_sort_order = sort_controls(
         ranking_table,
-        numeric_columns=["순위", "보정매출"],
+        numeric_columns=["순위", "보정매출", "예약인원"],
         key_prefix="ranking",
         label="정렬",
         default_column="보정매출",
@@ -1803,21 +1824,25 @@ with tab_ranking:
         ranking_display["보정매출"] = (
             ranking_display["보정매출"].map(format_won)
         )
+        ranking_display["예약인원"] = (
+            ranking_display["예약인원"].map(format_count)
+        )
 
         render_html_table(
             ranking_display,
             left_align_columns=["대리점명"],
-            right_align_columns=["보정매출"],
+            right_align_columns=["보정매출", "예약인원"],
             column_widths={
-                "순위": "80px",
-                "대리점코드": "150px",
-                "대리점명": "330px",
-                "담당실": "150px",
-                "담당팀": "150px",
-                "담당세일즈": "160px",
+                "순위": "70px",
+                "대리점코드": "130px",
+                "대리점명": "280px",
+                "담당실": "130px",
+                "담당팀": "130px",
+                "담당세일즈": "140px",
                 "보정매출": "190px",
+                "예약인원": "120px",
             },
-            min_table_width="1210px",
+            min_table_width="1190px",
             max_height=560,
         )
 
