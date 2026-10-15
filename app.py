@@ -759,42 +759,79 @@ def render_overview_table():
 
         rows.append(
             "<tr>"
-            f"<td>{escape(label)}</td>"
-            f"<td>{content_html}</td>"
+            f"<td class='overview-label'>{escape(label)}</td>"
+            f"<td class='overview-content'>{content_html}</td>"
             "</tr>"
         )
 
     st.markdown(
         f"""
-        <div style="width:100%; overflow-x:auto; border:1px solid {BORDER};
-                    border-radius:10px; margin-bottom:12px;">
-            <table style="width:100%; border-collapse:collapse;
-                          color:{DARK}; background:#FFFFFF; font-size:14px;">
-                <thead>
-                    <tr style="background:{LIGHT_PURPLE};">
-                        <th style="padding:10px 14px; text-align:center;">구분</th>
-                        <th style="padding:10px 14px; text-align:center;">내용</th>
-                    </tr>
-                </thead>
-                <tbody>{''.join(rows)}</tbody>
-            </table>
-        </div>
         <style>
-            table td {{
-                padding:10px 14px;
-                border-top:1px solid {BORDER};
-                vertical-align:middle;
-                line-height:1.6;
+            /* 표 아래에 붙는 여백을 줄입니다. */
+            div[data-testid="stElementContainer"]:has(.overview-table-wrap),
+            div[data-testid="stElementContainer"]:has(.multiplier-table-wrap) {{
+                margin-bottom: 0 !important;
+                padding-bottom: 0 !important;
             }}
-            table td:first-child {{
-                width:130px;
-                text-align:center;
-                white-space:nowrap;
+
+            .overview-table-wrap {{
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                border: 1px solid {BORDER};
+                border-radius: 10px;
+                background: #FFFFFF;
             }}
-            table td:last-child {{
-                text-align:left;
+
+            .overview-table-wrap table {{
+                width: 100%;
+                margin: 0;
+                border-collapse: collapse;
+                color: {DARK};
+                background: #FFFFFF;
+                font-size: 14px;
+            }}
+
+            .overview-table-wrap th {{
+                padding: 10px 14px;
+                text-align: center !important;
+                background: {LIGHT_PURPLE};
+                color: {DARK};
+                font-weight: 700;
+            }}
+
+            .overview-table-wrap td {{
+                padding: 8px 14px;
+                border-top: 1px solid {BORDER};
+                vertical-align: middle;
+                line-height: 1.5;
+            }}
+
+            .overview-table-wrap .overview-label {{
+                width: 120px;
+                text-align: center !important;
+                white-space: nowrap;
+            }}
+
+            .overview-table-wrap .overview-content {{
+                text-align: left !important;
             }}
         </style>
+
+        <div class="overview-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>구분</th>
+                        <th>내용</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {''.join(rows)}
+                </tbody>
+            </table>
+        </div>
         """,
         unsafe_allow_html=True,
     )
@@ -804,45 +841,89 @@ def render_multiplier_table():
     """상품 속성별 인정 배수 표를 표시합니다."""
     st.markdown(
         f"""
-        <div style="width:100%; overflow-x:auto; border:1px solid {BORDER};
-                    border-radius:10px; margin-bottom:12px;">
-            <table style="width:100%; border-collapse:collapse; color:{DARK};
-                          background:#FFFFFF; font-size:14px; text-align:center;">
+        <div class="multiplier-table-wrap">
+            <table>
                 <thead>
-                    <tr style="background:{LIGHT_PURPLE};">
-                        <th style="padding:10px;">상품 속성</th>
-                        <th style="padding:10px;">브랜드</th>
-                        <th style="padding:10px;">인정 배수</th>
-                        <th style="padding:10px;">휴일 예약</th>
+                    <tr>
+                        <th>상품 속성</th>
+                        <th>브랜드</th>
+                        <th>인정 배수</th>
+                        <th>휴일 예약</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td style="padding:10px;">Z</td>
-                        <td style="padding:10px;">제우스</td>
-                        <td rowspan="2" style="padding:10px;">2배</td>
-                        <td rowspan="4" style="padding:10px;">1.5배</td>
+                        <td>Z</td>
+                        <td>제우스</td>
+                        <td rowspan="2">2배</td>
+                        <td rowspan="4">1.5배</td>
                     </tr>
                     <tr>
-                        <td style="padding:10px;">U</td>
-                        <td style="padding:10px;">우리끼리</td>
+                        <td>U</td>
+                        <td>우리끼리</td>
                     </tr>
                     <tr>
-                        <td style="padding:10px;">P</td>
-                        <td style="padding:10px;">스탠다드, 프리미엄</td>
-                        <td style="padding:10px;">1.5배</td>
+                        <td>P</td>
+                        <td>스탠다드, 프리미엄</td>
+                        <td>1.5배</td>
                     </tr>
                     <tr>
-                        <td style="padding:10px;">ALL (Q 제외)</td>
-                        <td style="padding:10px;">-</td>
-                        <td style="padding:10px;">1배</td>
+                        <td>ALL (Q 제외)</td>
+                        <td>-</td>
+                        <td>1배</td>
                     </tr>
                 </tbody>
             </table>
         </div>
+
+        <style>
+            .multiplier-table-wrap {{
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                border: 1px solid {BORDER};
+                border-radius: 10px;
+                background: #FFFFFF;
+            }}
+
+            .multiplier-table-wrap table {{
+                width: 100%;
+                margin: 0;
+                border-collapse: collapse;
+                color: {DARK};
+                background: #FFFFFF;
+                font-size: 14px;
+                table-layout: fixed;
+            }}
+
+            .multiplier-table-wrap th,
+            .multiplier-table-wrap td {{
+                padding: 10px 12px;
+                text-align: center !important;
+                vertical-align: middle !important;
+                border-right: 1px solid {BORDER};
+            }}
+
+            .multiplier-table-wrap th {{
+                background: {LIGHT_PURPLE};
+                color: {DARK};
+                font-weight: 700;
+            }}
+
+            .multiplier-table-wrap td {{
+                border-top: 1px solid {BORDER};
+            }}
+
+            .multiplier-table-wrap th:last-child,
+            .multiplier-table-wrap td:last-child {{
+                border-right: 0;
+            }}
+        </style>
         """,
         unsafe_allow_html=True,
     )
+
 
 
 # =========================================================
