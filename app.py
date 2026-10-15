@@ -510,6 +510,15 @@ def format_won(value):
     return f"{float(value):,.0f}원"
 
 
+def format_count(value):
+    if pd.isna(value) or str(value).strip() == "":
+        return "-"
+    try:
+        return f"{int(round(float(value))):,}명"
+    except (ValueError, TypeError):
+        return str(value)
+
+
 def format_number(value):
     if pd.isna(value):
         return ""
@@ -600,6 +609,7 @@ def load_sales_sheet(
         "담당팀": ["담당팀", "영업팀", "담당영업팀"],
         "담당세일즈": ["담당세일즈", "담당 세일즈", "세일즈"],
         "대리점명": ["대리점한글명", "대리점명", "대리점 이름"],
+        "예약인원": ["예약인원", "예약 인원", "예약인원수", "인원수", "예약자수", "인원"],
     }
 
     rename_map = {
@@ -625,6 +635,11 @@ def load_sales_sheet(
     dataframe["매출"] = numeric_series(
         dataframe["_원본매출"]
     ).fillna(0)
+
+    if "예약인원" in dataframe.columns:
+        dataframe["예약인원"] = numeric_series(
+            dataframe["예약인원"]
+        ).fillna(0)
 
     # 본부/실/팀 등 구분 컬럼에 병합된 셀이 있으면 위 값을 이어받습니다.
     hierarchy_columns = [
@@ -2159,7 +2174,7 @@ with tab_real_sales:
         """
         <div class="info-note">
             엑셀 실매출 시트의 본부, 영업실, 영업팀, 담당세일즈,
-            대리점코드, 대리점한글명, 실매출 데이터를 표시합니다.
+            대리점코드, 대리점한글명, 실매출, 예약인원 데이터를 표시합니다.
             검색어와 정렬 기준을 함께 사용할 수 있습니다.
         </div>
         """,
@@ -2177,6 +2192,7 @@ with tab_real_sales:
         ("_대리점코드", "대리점코드"),
         ("대리점명", "대리점한글명"),
         ("매출", "실매출"),
+        ("예약인원", "예약인원"),
     ]
 
     for source_column, display_column in display_column_map:
@@ -2201,10 +2217,15 @@ with tab_real_sales:
             list(real_sales_filtered.columns),
         )
 
-    # 매출 숫자 기준으로 정렬할 수 있도록 내부 정렬 컬럼을 유지합니다.
+    # 매출 및 예약인원 숫자 기준으로 정렬할 수 있도록 내부 정렬 컬럼을 유지합니다.
+    available_numeric = [
+        column
+        for column in ["실매출", "예약인원"]
+        if column in real_sales_filtered.columns
+    ]
     real_sales_filtered, real_sort_column, real_sort_order = sort_controls(
         real_sales_filtered,
-        numeric_columns=["실매출"],
+        numeric_columns=available_numeric,
         key_prefix="real_sales",
         label="숫자 정렬",
         default_column="실매출",
@@ -2223,12 +2244,27 @@ with tab_real_sales:
         real_sales_table["실매출"] = real_sales_table[
             "실매출"
         ].map(format_won)
+        if "예약인원" in real_sales_table.columns:
+            real_sales_table["예약인원"] = real_sales_table[
+                "예약인원"
+            ].map(format_count)
 
         render_html_table(
             real_sales_table,
             left_align_columns=["대리점한글명"],
-            right_align_columns=["실매출"],
+            right_align_columns=["실매출", "예약인원"],
+            column_widths={
+                "본부": "8%",
+                "영업실": "9%",
+                "영업팀": "11%",
+                "담당세일즈": "9%",
+                "대리점코드": "10%",
+                "대리점한글명": "22%",
+                "실매출": "17%",
+                "예약인원": "14%",
+            },
             max_height=620,
+            fit_width=True,
         )
 
 
