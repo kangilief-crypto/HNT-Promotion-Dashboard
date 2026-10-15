@@ -884,7 +884,8 @@ def render_multiplier_table():
             table {{
                 width: 100%;
                 margin: 0;
-                border-collapse: collapse;
+                border-collapse: separate;
+                border-spacing: 0;
                 table-layout: fixed;
                 font-size: 14px;
             }}
@@ -905,7 +906,9 @@ def render_multiplier_table():
                 border-top: 1px solid {BORDER};
             }}
 
-            th:last-child, td:last-child {{
+            /* 마지막 열의 오른쪽 선만 제거합니다. */
+            th:last-child,
+            td.last-column {{
                 border-right: 0;
             }}
         </style>
@@ -926,7 +929,7 @@ def render_multiplier_table():
                         <td>Z</td>
                         <td>제우스</td>
                         <td rowspan="2">2배</td>
-                        <td rowspan="4">1.5배</td>
+                        <td rowspan="4" class="last-column">1.5배</td>
                     </tr>
                     <tr>
                         <td>U</td>
@@ -950,6 +953,7 @@ def render_multiplier_table():
     """
 
     components.html(html, height=215, scrolling=False)
+
 
 
 
