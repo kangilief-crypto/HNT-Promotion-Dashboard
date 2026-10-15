@@ -831,6 +831,11 @@ def render_overview_table():
             li {{
                 margin: 4px 0;
             }}
+
+            tbody tr:last-child td {
+    border-bottom: 1px solid {BORDER};
+}
+
         </style>
     </head>
     <body>
@@ -846,7 +851,7 @@ def render_overview_table():
     </html>
     """
 
-    components.html(html, height=300, scrolling=False)
+    components.html(html, height=330, scrolling=False)
 
 
 def render_multiplier_table():
