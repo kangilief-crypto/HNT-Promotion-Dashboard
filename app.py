@@ -143,19 +143,42 @@ st.markdown(
         .stTabs [data-baseweb="tab-list"] {{
             gap: 8px;
             border-bottom: 1px solid {BORDER};
+            padding-bottom: 5px;
         }}
 
         .stTabs [data-baseweb="tab"] {{
             height: 46px;
             color: {MUTED};
-            font-weight: 650;
+            font-weight: 700;
             padding: 0 18px;
+            border: 1px solid transparent;
             border-radius: 8px 8px 0 0;
+            transition: filter 0.15s ease;
         }}
 
-        .stTabs [aria-selected="true"] {{
-            color: {PURPLE} !important;
-            background-color: {LIGHT_PURPLE};
+        /* 홀수 번째 탭: 보라색 */
+        .stTabs [data-baseweb="tab"]:nth-child(odd) {{
+            color: #FFFFFF;
+            background-color: {PURPLE};
+        }}
+
+        /* 짝수 번째 탭: 민트색 */
+        .stTabs [data-baseweb="tab"]:nth-child(even) {{
+            color: {DARK};
+            background-color: {MINT};
+        }}
+
+        /* 선택된 탭은 아래쪽 테두리를 반대 색으로 강조합니다. */
+        .stTabs [data-baseweb="tab"]:nth-child(odd)[aria-selected="true"] {{
+            border-bottom: 4px solid {MINT};
+        }}
+
+        .stTabs [data-baseweb="tab"]:nth-child(even)[aria-selected="true"] {{
+            border-bottom: 4px solid {PURPLE};
+        }}
+
+        .stTabs [data-baseweb="tab"]:hover {{
+            filter: brightness(0.92);
         }}
 
         .stTabs [data-baseweb="tab-highlight"] {{
@@ -702,25 +725,44 @@ def render_overview_table():
         ("출발일", "2026년 10월 1일 ~ 2027년 2월 28일"),
         ("속성", "ALL 속성 (Q 제외)"),
         (
-            "인정배수",
-            "Z/U(제우스·우리끼리) 2배, "
-            "P(스탠다드·프리미엄) 1.5배, "
-            "기타 ALL 속성 1배, 휴일예약 1.5배",
+            "제외",
+            "인센티브, 코브랜드, 닷컴, 랜드온리, 업무포탈, "
+            "항공, FND, 호텔, 유아, 취소예약",
         ),
         (
-            "VI 지급",
-            "매출 및 성장률 1~10위 대상. "
-            "보정매출 131,612,240원 미만 대리점은 지급 대상에서 제외",
+            "지급",
+            [
+                "프로모션 종료 후 인정배수 적용 매출을 기준으로 매출 및 성장률 순위 산정",
+                "매출순위 및 매출성장률 기준 1위 ~ 10위 대리점 대상 VI 지급",
+                "최소 매출 허들 131,612,240원(동기간 2025년 평균 매출) 미달성 대리점은 지급 대상에서 제외",
+                "매출순위와 매출 성장률 기준을 동시에 충족한 경우 총 지급액이 높은 1개의 기준만 적용",
+            ],
         ),
     ]
 
-    rows = "".join(
-        "<tr>"
-        f"<td>{escape(label)}</td>"
-        f"<td>{escape(content)}</td>"
-        "</tr>"
-        for label, content in overview
-    )
+    rows = []
+
+    for label, content in overview:
+        if label == "지급":
+            content_html = (
+                "<ol style='margin:0; padding-left:22px;'>"
+                + "".join(
+                    "<li style='margin:4px 0;'>"
+                    + escape(item)
+                    + "</li>"
+                    for item in content
+                )
+                + "</ol>"
+            )
+        else:
+            content_html = escape(content)
+
+        rows.append(
+            "<tr>"
+            f"<td>{escape(label)}</td>"
+            f"<td>{content_html}</td>"
+            "</tr>"
+        )
 
     st.markdown(
         f"""
@@ -730,11 +772,11 @@ def render_overview_table():
                           color:{DARK}; background:#FFFFFF; font-size:14px;">
                 <thead>
                     <tr style="background:{LIGHT_PURPLE};">
-                        <th style="padding:10px 14px;">구분</th>
-                        <th style="padding:10px 14px;">내용</th>
+                        <th style="padding:10px 14px; text-align:center;">구분</th>
+                        <th style="padding:10px 14px; text-align:center;">내용</th>
                     </tr>
                 </thead>
-                <tbody>{rows}</tbody>
+                <tbody>{''.join(rows)}</tbody>
             </table>
         </div>
         <style>
@@ -743,6 +785,14 @@ def render_overview_table():
                 border-top:1px solid {BORDER};
                 vertical-align:middle;
                 line-height:1.6;
+            }}
+            table td:first-child {{
+                width:130px;
+                text-align:center;
+                white-space:nowrap;
+            }}
+            table td:last-child {{
+                text-align:left;
             }}
         </style>
         """,
@@ -844,7 +894,118 @@ vi_df = pd.DataFrame(
     ],
     columns=["순위 기준", "순위", "지급 금액", "개수", "지급액"],
 )
-render_html_table(vi_df, max_height=420)
+
+vi_rows = []
+
+for criterion, group in vi_df.groupby("순위 기준", sort=False):
+    group_size = len(group)
+
+    for row_index, (_, row) in enumerate(group.iterrows()):
+        cells = []
+
+        if row_index == 0:
+            cells.append(
+                f"""
+                <td rowspan="{group_size}"
+                    style="text-align:center; vertical-align:middle;
+                           font-weight:700; background:{LIGHT_PURPLE};">
+                    {escape(str(criterion))}
+                </td>
+                """
+            )
+
+        for column in ["순위", "지급 금액", "개수", "지급액"]:
+            cells.append(
+                "<td style='text-align:center; vertical-align:middle;'>"
+                + escape(str(row[column]))
+                + "</td>"
+            )
+
+        vi_rows.append(
+            "<tr>" + "".join(cells) + "</tr>"
+        )
+
+vi_table_html = f"""
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <style>
+        * {{
+            box-sizing: border-box;
+        }}
+
+        html, body {{
+            margin: 0;
+            padding: 0;
+            font-family: Pretendard, -apple-system,
+                         BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: {DARK};
+            background: transparent;
+        }}
+
+        .vi-table-wrap {{
+            width: 100%;
+            border: 1px solid {BORDER};
+            border-radius: 10px;
+            overflow: hidden;
+            background: #FFFFFF;
+        }}
+
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }}
+
+        th {{
+            padding: 10px 12px;
+            text-align: center;
+            background: {LIGHT_PURPLE};
+            color: {DARK};
+            font-weight: 700;
+            border-right: 1px solid {BORDER};
+        }}
+
+        td {{
+            padding: 10px 12px;
+            border-top: 1px solid {BORDER};
+            border-right: 1px solid {BORDER};
+            line-height: 1.5;
+        }}
+
+        th:last-child,
+        td:last-child {{
+            border-right: 0;
+        }}
+    </style>
+</head>
+<body>
+    <div class="vi-table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>순위 기준</th>
+                    <th>순위</th>
+                    <th>지급 금액</th>
+                    <th>개수</th>
+                    <th>지급액</th>
+                </tr>
+            </thead>
+            <tbody>
+                {''.join(vi_rows)}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
+"""
+
+components.html(
+    vi_table_html,
+    height=420,
+    scrolling=False,
+)
 
 st.divider()
 
@@ -1017,8 +1178,9 @@ sales_ranking["대리점명"] = (
 
 
 # =========================================================
-# KPI — 기존 기준에 따라 보정매출 사용
+# KPI — 실매출 기준
 # =========================================================
+# 총 대리점 수의 계산 방식은 기존 코드와 동일하게 유지합니다.
 total_agencies = sales_ranking["_대리점코드"].nunique()
 
 if "담당세일즈" in sales_ranking.columns:
@@ -1033,9 +1195,12 @@ if "담당세일즈" in sales_ranking.columns:
 else:
     total_staff = 0
 
-total_adjusted_sales = sales_ranking["보정매출"].sum()
-average_adjusted_sales = (
-    total_adjusted_sales / total_agencies
+# 총매출은 실매출 시트 기준으로 계산합니다.
+total_real_sales = real_sales_df["매출"].sum()
+
+# 평균 실매출은 기존 총 대리점 수를 분모로 계산합니다.
+average_real_sales = (
+    total_real_sales / total_agencies
     if total_agencies
     else 0
 )
@@ -1051,7 +1216,7 @@ with kpi1:
     render_kpi(
         "총 대리점 수",
         f"{total_agencies:,}개",
-        "보정매출 시트 기준",
+        "매출발생 대리점 기준",
     )
 
 with kpi2:
@@ -1064,15 +1229,15 @@ with kpi2:
 
 with kpi3:
     render_kpi(
-        "총보정매출",
-        format_won(total_adjusted_sales),
-        "대리점별 보정매출 합계",
+        "실매출",
+        format_won(total_real_sales),
+        "대리점별 실매출 합계",
     )
 
 with kpi4:
     render_kpi(
-        "대리점당 평균 보정매출",
-        format_won(average_adjusted_sales),
+        "대리점당 평균 실매출",
+        format_won(average_real_sales),
         accent="mint",
     )
 
