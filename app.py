@@ -2022,6 +2022,7 @@ with tab_channel:
     )
 
     channel_source = real_sales_df.copy()
+
     channel_source["세부채널"] = (
         channel_source["채널구분"]
         .fillna("")
@@ -2034,7 +2035,6 @@ with tab_channel:
     ] = "미분류"
 
     channel_source["유통채널"] = (
-    channel_source["유통채널"] = (
         channel_source["채널구분"].apply(classify_channel)
     )
 
@@ -2043,13 +2043,6 @@ with tab_channel:
         .groupby("유통채널", as_index=False)["매출"]
         .sum()
         .sort_values("매출", ascending=False)
-        .reset_index(drop=True)
-    )
-    
-    channel_summary = (
-        channel_summary
-        .sort_values("_정렬순서")
-        .drop(columns="_정렬순서")
         .reset_index(drop=True)
     )
 
