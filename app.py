@@ -2015,154 +2015,185 @@ with tab_channel:
         """
         <div class="info-note">
             유통채널별 매출은 실매출 시트를 기준으로 집계합니다.
-            그래프의 기타 영역에 마우스를 올리면 세부 채널 구성비를 확인할 수 있습니다.
+            그래프의 기타 영역에 마우스를 올리면 세부 채널 구성을 확인할 수 있습니다.
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    channel_source = real_sales_df.copy()
+    required_columns = ["채널구분", "매출"]
+    missing_columns = [
+        column
+        for column in required_columns
+        if column not in real_sales_df.columns
+    ]
 
-    channel_source["세부채널"] = (
-        channel_source["채널구분"]
-        .fillna("")
-        .astype(str)
-        .str.strip()
-    )
-    channel_source.loc[
-        channel_source["세부채널"].eq(""),
-        "세부채널",
-    ] = "미분류"
-
-    channel_source["유통채널"] = (
-        channel_source["채널구분"].apply(classify_channel)
-    )
-
-    channel_summary = (
-        channel_source
-        .groupby("유통채널", as_index=False)["매출"]
-        .sum()
-        .sort_values("매출", ascending=False)
-        .reset_index(drop=True)
-    )
-
-    channel_colors = {
-        "이마트": "#FFD600",
-        "롯데마트": "#DA291C",
-        "롯데백화점": "#C9A227",
-        "하나로마트": "#8BC34A",
-        "NC": "#FFFFFF",
-        "기타": "#A9A5B3",
-    }
-
-    total_channel_sales = channel_summary["매출"].sum()
-
-    if channel_summary.empty or total_channel_sales == 0:
-        st.info("표시할 유통채널별 매출 데이터가 없습니다.")
+    if missing_columns:
+        st.error(
+            "유통채널 그래프에 필요한 컬럼을 찾을 수 없습니다: "
+            + ", ".join(missing_columns)
+        )
     else:
-        other_detail = (
-            channel_source[
-                channel_source["유통채널"].eq("기타")
-            ]
-            .groupby("세부채널")["매출"]
-            .sum()
-            .sort_values(ascending=False)
+        channel_source = real_sales_df[
+            ["채널구분", "매출"]
+        ].copy()
+
+        channel_source["세부채널"] = (
+            channel_source["채널구분"]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+        )
+        channel_source.loc[
+            channel_source["세부채널"].eq(""),
+            "세부채널",
+        ] = "미분류"
+
+        channel_source["매출"] = pd.to_numeric(
+            channel_source["매출"],
+            errors="coerce",
+        ).fillna(0)
+
+        channel_source["유통채널"] = (
+            channel_source["채널구분"].apply(classify_channel)
         )
 
-        total_other_sales = other_detail.sum()
+        channel_summary = (
+            channel_source
+            .groupby("유통채널", as_index=False)["매출"]
+            .sum()
+            .sort_values("매출", ascending=False)
+            .reset_index(drop=True)
+        )
 
-        if total_other_sales > 0:
-            detail_lines = []
+        channel_colors = {
+            "이마트": "#FFD600",
+            "롯데마트": "#DA291C",
+            "롯데백화점": "#C9A227",
+            "하나로마트": "#8BC34A",
+            "NC": "#D8D5DE",
+            "기타": "#A9A5B3",
+        }
 
-            for name, value in other_detail.items():
-                total_share = value / total_channel_sales * 100
-                other_share = value / total_other_sales * 100
+        total_channel_sales = channel_summary["매출"].sum()
 
-                detail_lines.append(
-                    f"{escape(str(name))}: "
-                    f"전체 매출 {total_share:.2f}% · "
-                    f"기타 내 {other_share:.2f}%"
+        if channel_summary.empty or total_channel_sales <= 0:
+            st.info("표시할 유통채널별 매출 데이터가 없습니다.")
+        else:
+            other_detail = (
+                channel_source[
+                    channel_source["유통채널"].eq("기타")
+                ]
+                .groupby("세부채널")["매출"]
+                .sum()
+                .sort_values(ascending=False)
+            )
+
+            total_other_sales = other_detail.sum()
+
+            if total_other_sales > 0:
+                detail_lines = []
+
+                for name, value in other_detail.items():
+                    total_share = value / total_channel_sales * 100
+                    other_share = value / total_other_sales * 100
+
+                    detail_lines.append(
+                        f"{escape(str(name))}: "
+                        f"전체 매출 {total_share:.2f}% · "
+                        f"기타 내 {other_share:.2f}%"
+                    )
+
+                other_hover = (
+                    "<b>기타 세부 구성</b><br>"
+                    + "<br>".join(detail_lines)
+                )
+            else:
+                other_hover = ""
+
+            channel_summary["기타 상세"] = channel_summary[
+                "유통채널"
+            ].apply(
+                lambda name: other_hover if name == "기타" else ""
+            )
+
+            if channel_summary["매출"].lt(0).any():
+                st.warning(
+                    "음수 매출이 포함되어 있어 원형 그래프를 표시할 수 없습니다. "
+                    "매출 데이터를 확인해 주세요."
+                )
+            else:
+                channel_chart = px.pie(
+                    channel_summary,
+                    names="유통채널",
+                    values="매출",
+                    hole=0.56,
+                    color="유통채널",
+                    color_discrete_map=channel_colors,
+                    custom_data=["기타 상세"],
                 )
 
-            other_hover = (
-                "<b>기타 세부 구성</b><br>"
-                + "<br>".join(detail_lines)
+                channel_chart.update_traces(
+                    sort=False,
+                    textposition="inside",
+                    texttemplate="%{label}<br>%{percent}",
+                    marker=dict(
+                        colors=[
+                            channel_colors[name]
+                            for name in channel_summary["유통채널"]
+                        ],
+                        line=dict(color="#A9A5B3", width=1.5),
+                    ),
+                    hovertemplate=(
+                        "<b>%{label}</b><br>"
+                        "실매출: %{value:,.0f}원<br>"
+                        "전체 구성비: %{percent}"
+                        "<br>%{customdata[0]}"
+                        "<extra></extra>"
+                    ),
+                )
+
+                channel_chart.update_layout(
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    font=dict(
+                        color=DARK,
+                        family="Pretendard, -apple-system, sans-serif",
+                    ),
+                    legend_title_text="유통채널",
+                    legend=dict(font=dict(size=12, color=DARK)),
+                    margin=dict(l=20, r=20, t=20, b=20),
+                )
+
+                st.plotly_chart(
+                    channel_chart,
+                    use_container_width=True,
+                )
+
+            channel_table = channel_summary[
+                ["유통채널", "매출"]
+            ].copy()
+
+            channel_table = channel_table.rename(
+                columns={"매출": "실매출"}
             )
-        else:
-            other_hover = ""
 
-        channel_summary["기타 상세"] = channel_summary[
-            "유통채널"
-        ].apply(
-            lambda name: other_hover if name == "기타" else ""
-        )
+            channel_table["구성비"] = (
+                channel_summary["매출"]
+                .div(total_channel_sales)
+                .mul(100)
+                .map(lambda value: f"{value:.1f}%")
+            )
 
-        channel_chart = px.pie(
-            channel_summary,
-            names="유통채널",
-            values="매출",
-            hole=0.56,
-            category_orders={"유통채널": channel_order},
-            color="유통채널",
-            color_discrete_map=channel_colors,
-            custom_data=["기타 상세"],
-        )
+            channel_table["실매출"] = channel_table[
+                "실매출"
+            ].map(format_won)
 
-        channel_chart.update_traces(
-            textposition="inside",
-            texttemplate="%{label}<br>%{percent}",
-            marker=dict(
-                colors=[
-                    channel_colors[name]
-                    for name in channel_summary["유통채널"]
-                ],
-                line=dict(color="#A9A5B3", width=1.5),
-            ),
-            hovertemplate=(
-                "<b>%{label}</b><br>"
-                "실매출: %{value:,.0f}원<br>"
-                "전체 구성비: %{percent}"
-                "<br>%{customdata[0]}"
-                "<extra></extra>"
-            ),
-        )
-
-        channel_chart.update_layout(
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color=DARK, family="Pretendard, -apple-system, sans-serif"),
-            legend_title_text="유통채널",
-            legend=dict(font=dict(size=12, color=DARK)),
-            margin=dict(l=20, r=20, t=20, b=20),
-        )
-
-        st.plotly_chart(
-            channel_chart,
-            use_container_width=True,
-        )
-
-        channel_table = channel_summary[
-            ["유통채널", "매출"]
-        ].copy()
-        channel_table = channel_table.rename(
-            columns={"매출": "실매출"}
-        )
-        channel_table["구성비"] = (
-            channel_summary["매출"]
-            .div(total_channel_sales)
-            .mul(100)
-            .map(lambda value: f"{value:.1f}%")
-        )
-        channel_table["실매출"] = channel_table[
-            "실매출"
-        ].map(format_won)
-
-        render_html_table(
-            channel_table,
-            right_align_columns=["실매출", "구성비"],
-            max_height=440,
-        )
-
+            render_html_table(
+                channel_table,
+                right_align_columns=["실매출", "구성비"],
+                max_height=440,
+            )
 
 # =========================================================
 # 실매출 탭: 검색 + 숫자 기준 정렬
