@@ -2044,7 +2044,7 @@ channel_summary = (
     .sum()
     .sort_values("매출", ascending=False)
     .reset_index(drop=True)
-)
+
     channel_summary = (
         channel_summary
         .sort_values("_정렬순서")
