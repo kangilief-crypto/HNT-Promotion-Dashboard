@@ -2034,36 +2034,17 @@ with tab_channel:
     ] = "미분류"
 
     channel_source["유통채널"] = (
-        channel_source["채널구분"].apply(classify_channel)
-    )
+ channel_source["유통채널"] = (
+    channel_source["채널구분"].apply(classify_channel)
+)
 
-    channel_summary = (
+channel_summary = (
     channel_source
     .groupby("유통채널", as_index=False)["매출"]
     .sum()
     .sort_values("매출", ascending=False)
     .reset_index(drop=True)
 )
-    )
-
-    channel_order = [
-        "이마트",
-        "롯데마트",
-        "롯데백화점",
-        "하나로마트",
-        "NC",
-        "기타",
-    ]
-
-    channel_summary["_정렬순서"] = channel_summary[
-        "유통채널"
-    ].map(
-        {
-            channel: index
-            for index, channel in enumerate(channel_order)
-        }
-    )
-
     channel_summary = (
         channel_summary
         .sort_values("_정렬순서")
