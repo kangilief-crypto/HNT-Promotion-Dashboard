@@ -2038,9 +2038,12 @@ with tab_channel:
     )
 
     channel_summary = (
-        channel_source
-        .groupby("유통채널", as_index=False)["매출"]
-        .sum()
+    channel_source
+    .groupby("유통채널", as_index=False)["매출"]
+    .sum()
+    .sort_values("매출", ascending=False)
+    .reset_index(drop=True)
+)
     )
 
     channel_order = [
